@@ -53,6 +53,8 @@ export default function WarrantsCalculator() {
     totalReturn: number;
     totalCost: number;
     netProfit: number;
+    roi: number;
+    breakeven: number;
   } | null>(null);
 
   useEffect(() => {
@@ -289,7 +291,8 @@ export default function WarrantsCalculator() {
     const r = Number(ratio);
     const a = Number(amount);
     const c = Number(cost);
-    const tP = Number(targetPrice);
+    // 優先使用預估股價，若為空則套用參考股價
+    const tP = targetPrice !== "" ? Number(targetPrice) : underlyingPrice || 0;
 
     const totalUnits = a * 1000;
     const totalCost = c * totalUnits;
@@ -305,12 +308,20 @@ export default function WarrantsCalculator() {
 
     const totalReturn = unitValue * totalUnits;
     const netProfit = totalReturn - totalCost;
+    const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+
+    // 計算損益平衡點 (標的股價達到此值時損益兩平)
+    const costPerUnit = c;
+    const breakeven =
+      type === "call" ? sP + costPerUnit / r : sP - costPerUnit / r;
 
     setResult({
       unitValue,
       totalReturn,
       totalCost,
       netProfit,
+      roi,
+      breakeven,
     });
   };
 
@@ -384,6 +395,14 @@ export default function WarrantsCalculator() {
                     帶入試算
                   </button>
                 </div>
+                {strikePrice !== "" &&
+                  ((type === "call" && underlyingPrice < Number(strikePrice)) ||
+                    (type === "put" &&
+                      underlyingPrice > Number(strikePrice))) && (
+                    <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
+                      ⚠️ 目前為價外，若維持此股價，到期結算價值將歸零。
+                    </div>
+                  )}
               </div>
             )}
           </div>
@@ -485,6 +504,16 @@ export default function WarrantsCalculator() {
               }
               className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
             />
+            {/* 針對手動輸入的預估股價進行價外提醒 */}
+            {targetPrice !== "" &&
+              strikePrice !== "" &&
+              ((type === "call" && Number(targetPrice) < Number(strikePrice)) ||
+                (type === "put" &&
+                  Number(targetPrice) > Number(strikePrice))) && (
+                <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
+                  ⚠️ 預估值為價外，若以此股價結算，價值將歸零。
+                </div>
+              )}
           </div>
 
           <button
@@ -493,6 +522,64 @@ export default function WarrantsCalculator() {
           >
             開始計算結算金額
           </button>
+
+          {result && (
+            <div className="mt-6 rounded-[10px] border border-[#d9e9f5] bg-gradient-to-br from-[#eaf3fa] to-[#f5faff] p-5">
+              <div className="mb-3.5 border-b border-[#d9e9f5] pb-2.5 text-[14px] font-bold tracking-widest text-[#4a7cab] uppercase">
+                試算結果
+              </div>
+              <div className="space-y-3 pt-1">
+                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                  <span>每單位權證到期價值：</span>
+                  <span className="font-bold text-[#33475b]">
+                    {result.unitValue.toFixed(4)} 元
+                  </span>
+                </div>
+                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                  <span>可拿回總金額：</span>
+                  <span className="font-bold text-[#33475b]">
+                    {Math.round(result.totalReturn).toLocaleString()} 元
+                  </span>
+                </div>
+                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                  <span>損益平衡標的價：</span>
+                  <span className="font-bold text-amber-600">
+                    {result.breakeven.toFixed(2)} 元
+                  </span>
+                </div>
+                <div className="mt-3 flex justify-between border-t border-dashed border-[#c9dded] pt-3 text-[14px] text-[#7691a8]">
+                  <span>淨損益 (報酬率)：</span>
+                  {Math.round(result.netProfit) > 0 ? (
+                    <div className="text-right">
+                      <div className="text-[13px] font-bold text-[#4caf82]">
+                        獲利 +{Math.round(result.netProfit).toLocaleString()} 元
+                      </div>
+                      <div className="text-[11px] font-medium text-[#4caf82]/80">
+                        (+{result.roi.toFixed(2)}%)
+                      </div>
+                    </div>
+                  ) : Math.round(result.netProfit) < 0 ? (
+                    <div className="text-right">
+                      <div className="text-[13px] font-bold text-[#e0716b]">
+                        虧損 -
+                        {Math.round(
+                          Math.abs(result.netProfit),
+                        ).toLocaleString()}{" "}
+                        元
+                      </div>
+                      <div className="text-[11px] font-medium text-[#e0716b]/80">
+                        ({result.roi.toFixed(2)}%)
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-[#33475b]">
+                      0 元 (損益兩平)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mt-6 border-t border-[#e8f0f6] pt-4">
             <button
@@ -558,52 +645,6 @@ export default function WarrantsCalculator() {
               </div>
             </div>
           </div>
-
-          {result && (
-            <div className="mt-6 rounded-[10px] border border-[#d9e9f5] bg-gradient-to-br from-[#eaf3fa] to-[#f5faff] p-5">
-              <div className="mb-3.5 border-b border-[#d9e9f5] pb-2.5 text-[14px] font-bold tracking-widest text-[#4a7cab] uppercase">
-                試算結果
-              </div>
-              <div className="space-y-3 pt-1">
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
-                  <span>每單位權證到期價值：</span>
-                  <span className="font-bold text-[#33475b]">
-                    {result.unitValue.toFixed(4)} 元
-                  </span>
-                </div>
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
-                  <span>可拿回總金額：</span>
-                  <span className="font-bold text-[#33475b]">
-                    {Math.round(result.totalReturn).toLocaleString()} 元
-                  </span>
-                </div>
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
-                  <span>總投入成本：</span>
-                  <span className="font-bold text-[#33475b]">
-                    {Math.round(result.totalCost).toLocaleString()} 元
-                  </span>
-                </div>
-                <div className="mt-3 flex justify-between border-t border-dashed border-[#c9dded] pt-3 text-[14px] text-[#7691a8]">
-                  <span>淨損益 (扣除成本)：</span>
-                  {result.netProfit > 0 ? (
-                    <span className="rounded-[20px] bg-[#eaf7f1] px-2.5 py-0.5 text-[13px] font-bold text-[#4caf82]">
-                      獲利 +{Math.round(result.netProfit).toLocaleString()} 元
-                    </span>
-                  ) : result.netProfit < 0 ? (
-                    <span className="rounded-[20px] bg-[#fdeeed] px-2.5 py-0.5 text-[13px] font-bold text-[#e0716b]">
-                      虧損 -
-                      {Math.round(Math.abs(result.netProfit)).toLocaleString()}{" "}
-                      元
-                    </span>
-                  ) : (
-                    <span className="font-bold text-[#33475b]">
-                      0 元 (損益兩平)
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
