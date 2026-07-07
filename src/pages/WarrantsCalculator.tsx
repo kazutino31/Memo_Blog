@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Calculator, CircleAlert ,TriangleAlert } from 'lucide-react';
+import { Calculator, TriangleAlert } from 'lucide-react';
 
 // Define the warrant interface based on the HTML logic
 interface Warrant {
