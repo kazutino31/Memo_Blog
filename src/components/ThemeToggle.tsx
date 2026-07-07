@@ -12,10 +12,10 @@ const LABELS = {
 
 export function ThemeToggle() {
   const { preference, cycle } = useThemeStore();
-  const Icon = ICONS[preference];
+  const Icon = ICONS[preference] ?? Monitor;
   return (
     <button
-      className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[var(--rule-strong)] bg-[var(--paper)]"
+      className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[var(--rule-strong)] "
       onClick={cycle}
       aria-label={`切換主題，目前：${LABELS[preference]}`}
       title={LABELS[preference]}

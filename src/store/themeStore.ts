@@ -21,10 +21,21 @@ function resolveTheme(pref: ThemePreference): ResolvedTheme {
 
 function applyTheme(resolved: ResolvedTheme) {
   document.documentElement.setAttribute("data-theme", resolved);
+  // 為 shadcn/Tailwind 深色模式添加 .dark 類
+  if (resolved === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 }
 
+const storedPreference = localStorage.getItem("theme");
 const initialPreference =
-  (localStorage.getItem("theme") as ThemePreference) || "system";
+  storedPreference === "light" ||
+  storedPreference === "dark" ||
+  storedPreference === "system"
+    ? storedPreference
+    : "light"; // 預設為 light
 const initialResolved = resolveTheme(initialPreference);
 
 export const useThemeStore = create<ThemeState>((set, get) => ({

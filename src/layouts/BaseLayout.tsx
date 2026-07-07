@@ -8,6 +8,7 @@ export default function BaseLayout() {
   const navigate = useNavigate();
   const isReading = location.pathname.startsWith("/notes/");
   const [progress, setProgress] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -66,7 +67,7 @@ export default function BaseLayout() {
               返回目錄
             </button>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             {location.pathname === "/" && (
               <Link
                 to="/calculator"
@@ -75,9 +76,51 @@ export default function BaseLayout() {
                 權證試算
               </Link>
             )}
+            {location.pathname === "/" && (
             <ThemeToggle />
+            )}
+            {/* 漢堡選單（手機端） */}
+            {location.pathname === "/" && (
+            <button
+              className="sm:hidden cursor-pointer border-none bg-transparent p-0 text-[var(--ink-soft)] hover:text-[var(--ink)]"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="開啟選單"
+            >
+              <svg
+                className="h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                {isMenuOpen ? (
+                  <path d="M18 6L6 18M6 6l12 12" />
+                ) : (
+                  <>
+                    <path d="M3 6h18" />
+                    <path d="M3 12h18" />
+                    <path d="M3 18h18" />
+                  </>
+                )}
+              </svg>
+            </button>
+            )}
           </div>
         </div>
+        {/* 下拉菜單（手機端） */}
+        {isMenuOpen && location.pathname === "/" && (
+          <div className="sm:hidden border-t border-[var(--rule)] bg-white/88 backdrop-blur-md dark:bg-[#16161a]/88">
+            <div className="mx-auto max-w-[920px] px-6 py-3">
+              <Link
+                to="/calculator"
+                className="block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                權證試算
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
       <Outlet />
     </div>
