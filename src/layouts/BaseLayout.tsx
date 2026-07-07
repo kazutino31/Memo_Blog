@@ -37,25 +37,15 @@ export default function BaseLayout() {
       />
       <nav className="sticky top-0 z-[100] border-b border-[var(--rule)] bg-white/88 backdrop-blur-md dark:bg-[#16161a]/88">
         <div className="mx-auto flex max-w-[920px] items-center justify-between px-6 py-4">
-          <Link
-            className={cn(
-              "cursor-pointer text-[19px] font-bold tracking-tight text-[var(--ink)] no-underline select-none [font-family:var(--serif)]",
-              isReading && "hidden",
-            )}
-            to="/"
-          >
-            <span className="text-[var(--accent-ink)]">Memo</span>
-          </Link>
           <div className="flex items-center gap-6">
             <Link
-              to="/calculator"
               className={cn(
-                "hidden sm:inline-block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors",
-                location.pathname === "/calculator" &&
-                  "text-[var(--accent-ink)]",
+                "cursor-pointer text-[19px] font-bold tracking-tight text-[var(--ink)] no-underline select-none [font-family:var(--serif)]",
+                isReading && "hidden",
               )}
+              to="/"
             >
-              權證試算
+              <span className="text-[var(--accent-ink)]">Memo</span>
             </Link>
             <button
               className={cn(
@@ -75,6 +65,16 @@ export default function BaseLayout() {
               </svg>
               返回目錄
             </button>
+          </div>
+          <div className="flex items-center gap-6">
+            {location.pathname === "/" && (
+              <Link
+                to="/calculator"
+                className="hidden sm:inline-block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors"
+              >
+                權證試算
+              </Link>
+            )}
             <ThemeToggle />
           </div>
         </div>
