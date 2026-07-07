@@ -169,29 +169,29 @@ export default function WarrantsCalculator() {
     }
   };
 
-  const shutdownServer = async () => {
-    if (
-      !confirm(
-        "確定要停止後端 Proxy 服務嗎？停止後將無法查詢代號，需手動重新啟動。",
-      )
-    )
-      return;
-    try {
-      const response = await fetch(
-        "https://memo-blog.onrender.com/api/shutdown",
-        {
-          method: "POST",
-        },
-      );
-      const result = await response.json();
-      if (result.success) {
-        alert("伺服器已停止");
-        setTimeout(() => window.location.reload(), 1500);
-      }
-    } catch {
-      alert("無法連接到伺服器，可能伺服器原本就已經是關閉狀態。");
-    }
-  };
+  // const shutdownServer = async () => {
+  //   if (
+  //     !confirm(
+  //       "確定要停止後端 Proxy 服務嗎？停止後將無法查詢代號，需手動重新啟動。",
+  //     )
+  //   )
+  //     return;
+  //   try {
+  //     const response = await fetch(
+  //       "https://memo-blog.onrender.com/api/shutdown",
+  //       {
+  //         method: "POST",
+  //       },
+  //     );
+  //     const result = await response.json();
+  //     if (result.success) {
+  //       alert("伺服器已停止");
+  //       setTimeout(() => window.location.reload(), 1500);
+  //     }
+  //   } catch {
+  //     alert("無法連接到伺服器，可能伺服器原本就已經是關閉狀態。");
+  //   }
+  // };
 
   const calculate = () => {
     const sP = Number(strikePrice);
