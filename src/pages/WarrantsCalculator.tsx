@@ -68,7 +68,7 @@ export default function WarrantsCalculator() {
       }
     } catch {
       setDbExists(false);
-      setDbStatus("伺服器未啟動 (Port 3001)");
+      setDbStatus("伺服器未啟動");
     }
   };
 
@@ -252,7 +252,7 @@ export default function WarrantsCalculator() {
                   type="text"
                   value={warrantId}
                   onChange={(e) => setWarrantId(e.target.value)}
-                  placeholder="例如: 03001P"
+                  placeholder="請輸入代號"
                   disabled={!dbExists}
                   className="flex-[2] rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none disabled:bg-[#eef2f5] disabled:text-[#a9bccb]"
                 />
@@ -390,13 +390,13 @@ export default function WarrantsCalculator() {
             </button>
           </div>
 
-          <button
+          {/* <button
             onClick={shutdownServer}
             disabled={!dbExists}
             className="mt-3 w-full rounded-[7px] border border-[#dce8f1] bg-transparent p-2.5 text-[12.5px] font-semibold text-[#a9bccb] transition hover:border-[#f3d3d1] hover:bg-[#fdeeed] hover:text-[#e0716b] disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
           >
-            停止服務 (釋放 Port 3001)
-          </button>
+            停止服務 (釋放 Port)
+          </button> */}
 
           <div
             className={cn(
