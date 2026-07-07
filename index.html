@@ -8,7 +8,7 @@
     <script>
       // GitHub Pages SPA fallback：還原 404.html 編碼過的路徑，讓 BrowserRouter 接手
       (function (l) {
-        if (l.search[1] === "/") {
+        if (l.search && l.search[1] === "/") {
           var decoded = l.search
             .slice(1)
             .split("&")
@@ -19,10 +19,11 @@
           window.history.replaceState(
             null,
             "",
-            l.pathname.slice(0, -1) + decoded + l.hash,
+            l.pathname.replace(/\/$/, "") + decoded + l.hash,
           );
         }
       })(window.location);
+    </script>
 
       (function () {
         var stored = localStorage.getItem("theme"); // 'light' | 'dark' | 'system' | null
