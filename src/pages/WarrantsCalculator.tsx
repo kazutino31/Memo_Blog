@@ -17,6 +17,9 @@ interface Warrant {
   "最新標的履約配發數量(每仟單位權證)"?: string | number;
   exercise_ratio?: string | number;
   ExerciseRatio?: string | number;
+  "標的證券/指數"?: string;
+  underlying_asset?: string;
+  UnderlyingAsset?: string;
 }
 
 interface DBStatus {
@@ -28,6 +31,7 @@ interface DBStatus {
 export default function WarrantsCalculator() {
   const [warrantId, setWarrantId] = useState("");
   const [warrantName, setWarrantName] = useState("");
+  const [underlyingPrice, setUnderlyingPrice] = useState<number | null>(null);
   const [type, setType] = useState<"call" | "put">("call");
   const [strikePrice, setStrikePrice] = useState<number | "">("");
   const [ratio, setRatio] = useState<number | "">("");
@@ -54,6 +58,7 @@ export default function WarrantsCalculator() {
   // 當代號改變時，清除舊的名稱顯示
   useEffect(() => {
     setWarrantName("");
+    setUnderlyingPrice(null);
   }, [warrantId]);
 
   const updateDBStatus = async () => {
@@ -81,6 +86,24 @@ export default function WarrantsCalculator() {
     }
   };
 
+  const fetchStockPrice = async (assetName: string) => {
+    try {
+      const response = await fetch(
+        "https://memo-blog.onrender.com/api/stock-live",
+      );
+      if (!response.ok) return;
+      const stocks = await response.json();
+      const stock = stocks.find(
+        (s: any) => s["證券名稱"] === assetName || s["證券代號"] === assetName,
+      );
+      if (stock && stock["收盤價"] && stock["收盤價"] !== "--") {
+        setUnderlyingPrice(Number(stock["收盤價"]));
+      }
+    } catch (err) {
+      console.error("抓取股價失敗", err);
+    }
+  };
+
   const applyWarrantData = (warrant: Warrant) => {
     const sPrice =
       warrant["最新履約價格(元)/履約指數"] ||
@@ -94,9 +117,15 @@ export default function WarrantsCalculator() {
       warrant.ExerciseRatio;
     const wName =
       warrant["權證簡稱"] || warrant.warrant_name || warrant.WarrantName || "";
+    const uAsset =
+      warrant["標的證券/指數"] ||
+      warrant.underlying_asset ||
+      warrant.UnderlyingAsset ||
+      "";
 
     if (sPrice) setStrikePrice(Number(sPrice));
     if (wName) setWarrantName(String(wName));
+    if (uAsset) fetchStockPrice(String(uAsset));
     if (tStr) {
       setType(
         tStr.includes("認售") || tStr.toLowerCase().includes("put")
@@ -285,6 +314,25 @@ export default function WarrantsCalculator() {
                 </label>
                 <div className="rounded-[7px] border border-[#dce8f1] bg-white/50 px-3 py-2.5 text-[15px] font-medium text-[#33475b]">
                   {warrantName}
+                </div>
+              </div>
+            )}
+
+            {underlyingPrice !== null && (
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-semibold text-[#7691a8]">
+                  標的最新價格 (參考)
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-[7px] border border-emerald-100 bg-emerald-50/30 px-3 py-2.5 text-[15px] font-bold text-emerald-600">
+                    {underlyingPrice}
+                  </div>
+                  <button
+                    onClick={() => setTargetPrice(underlyingPrice)}
+                    className="rounded-[7px] bg-emerald-600 px-3 py-2.5 text-[12px] font-bold text-white transition hover:bg-emerald-700"
+                  >
+                    帶入試算
+                  </button>
                 </div>
               </div>
             )}

@@ -69,6 +69,26 @@ app.get("/api/twse-live", async (req, res) => {
   }
 });
 
+// 獲取所有個股日收盤價資訊 (STOCK_DAY_ALL)
+app.get("/api/stock-live", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      },
+    );
+    if (!response.ok) throw new Error("證交所個股資料讀取失敗");
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 前端輸入代號，後端讀取 JSON 檔案，用 .find() 快速過濾後回傳
 app.get("/api/warrant/:id", (req, res) => {
   try {
