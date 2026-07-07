@@ -19,14 +19,24 @@ export default function ArticlePage() {
 
   return (
     <div>
-      <article className="article-wrap">
-        <div className="article-eyebrow">{note.category}</div>
-        <h1 className="article-title">{note.title}</h1>
-        <div className="article-meta">
+      <TableOfContents containerRef={bodyRef} deps={[note.slug]} />
+      <article className="mx-auto max-w-[var(--maxw)] px-6 pt-14 pb-[60px] max-[640px]:px-5 max-[640px]:pt-9 max-[640px]:pb-10">
+        <div className="mb-4 text-[13px] font-semibold tracking-wider text-[var(--accent-ink)] uppercase">
+          {note.category}
+        </div>
+        <h1 className="mb-5 text-[clamp(30px,4.2vw,44px)] leading-[1.15] font-bold tracking-tight text-[var(--ink)] [font-family:var(--serif)]">
+          {note.title}
+        </h1>
+        <div className="mb-10 flex flex-wrap items-center gap-3.5 border-b border-[var(--rule)] pb-8 text-sm text-[var(--ink-faint)]">
           <span>{note.publishDate}</span>
           {note.tags.map((tag) => (
-            <Link to={`/tags/${encodeURIComponent(tag)}`} key={tag}>
-              <span className="dot" /> {tag}
+            <Link
+              className="inline-flex items-center gap-1.5 text-[var(--ink-faint)] hover:text-[var(--accent-ink)]"
+              to={`/tags/${encodeURIComponent(tag)}`}
+              key={tag}
+            >
+              <span className="h-[3px] w-[3px] rounded-full bg-[var(--ink-faint)]" />{" "}
+              {tag}
             </Link>
           ))}
         </div>
@@ -34,7 +44,6 @@ export default function ArticlePage() {
           <MarkdownBody content={note.content} />
         </div>
       </article>
-      <TableOfContents containerRef={bodyRef} deps={[note.slug]} />
       <SeriesNav notes={seriesNotes} currentSlug={note.slug} />
     </div>
   );

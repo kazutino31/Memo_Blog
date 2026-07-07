@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>權證到期結算試算機</title>
+    <style>
+      :root {
+        --bg-1: #e9f2f9;
+        --bg-2: #f6fafd;
+        --surface: #ffffff;
+        --surface-alt: #f2f7fb;
+        --border: #dce8f1;
+        --border-soft: #e8f0f6;
+        --primary: #5b93c4;
+        --primary-dark: #4a7cab;
+        --primary-light: #eaf3fa;
+        --text: #33475b;
+        --text-soft: #7691a8;
+        --text-faint: #a9bccb;
+        --success: #4caf82;
+        --success-bg: #eaf7f1;
+        --danger: #e0716b;
+        --danger-bg: #fdeeed;
+        --neutral: #8fa5b8;
+        --neutral-dark: #6c8499;
+        --radius-lg: 18px;
+        --radius-md: 10px;
+        --radius-sm: 7px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "PingFang TC",
+          "Microsoft JhengHei", "Segoe UI", Roboto, "Helvetica Neue", Arial,
+          sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 55%);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.5;
+        margin: 0;
+        padding: 48px 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .container {
+        background-color: var(--surface);
+        border-radius: var(--radius-lg);
+        box-shadow:
+          0 20px 40px -20px rgba(91, 147, 196, 0.25),
+          0 4px 10px -4px rgba(91, 147, 196, 0.12);
+        padding: 36px 32px 28px;
+        width: 100%;
+        max-width: 480px;
+        border: 1px solid var(--border-soft);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+
+      .header .icon-badge {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 12px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, var(--primary-light), #dcebf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+      }
+
+      h2 {
+        margin: 0 0 4px 0;
+        color: #2c4258;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .subtitle {
+        margin: 0;
+        font-size: 12.5px;
+        color: var(--text-faint);
+        letter-spacing: 0.3px;
+      }
+
+      .section-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--primary-dark);
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin: 0 0 12px 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .section-label::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--primary);
+        display: inline-block;
+      }
+
+      .card-block {
+        background: var(--surface-alt);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        padding: 18px 16px;
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background-color: var(--surface);
+        color: var(--text);
+        font-size: 15px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      input::placeholder {
+        color: var(--text-faint);
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(91, 147, 196, 0.15);
+      }
+
+      input:disabled,
+      select:disabled {
+        background-color: #eef2f5;
+        color: var(--text-faint);
+        border-color: var(--border-soft);
+      }
+
+      .search-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      button {
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background-color 0.2s,
+          transform 0.05s,
+          box-shadow 0.2s;
+        font-family: inherit;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      button:disabled {
+        background-color: #dbe4ea !important;
+        color: #a9bccb !important;
+        cursor: not-allowed;
+        box-shadow: none !important;
+      }
+
+      #searchButton {
+        flex: 1;
+        background-color: var(--neutral-dark);
+        color: white;
+        padding: 10px 8px;
+        font-size: 13.5px;
+      }
+
+      #searchButton:hover:not(:disabled) {
+        background-color: #587389;
+      }
+
+      .btn-calc {
+        width: 100%;
+        background-color: var(--primary);
+        color: white;
+        padding: 13px;
+        font-size: 15.5px;
+        box-shadow: 0 8px 16px -8px rgba(91, 147, 196, 0.6);
+      }
+
+      .btn-calc:hover:not(:disabled) {
+        background-color: var(--primary-dark);
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .btn-secondary {
+        flex: 1;
+        font-size: 13px;
+        padding: 10px;
+        color: white;
+      }
+
+      #liveButton {
+        background-color: #79a6cf;
+      }
+      #liveButton:hover:not(:disabled) {
+        background-color: #6893bd;
+      }
+
+      #syncButton {
+        background-color: #98b3c9;
+      }
+      #syncButton:hover:not(:disabled) {
+        background-color: #86a2b9;
+      }
+
+      #shutdownButton {
+        width: 100%;
+        margin-top: 12px;
+        background-color: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-faint);
+        padding: 9px;
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+
+      #shutdownButton:hover:not(:disabled) {
+        background-color: var(--danger-bg);
+        color: var(--danger);
+        border-color: #f3d3d1;
+      }
+
+      .db-status {
+        font-size: 11.5px;
+        color: var(--text-faint);
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .result-box {
+        margin-top: 22px;
+        padding: 20px;
+        background: linear-gradient(160deg, var(--primary-light), #f5faff);
+        border-radius: var(--radius-md);
+        display: none;
+        border: 1px solid #d9e9f5;
+      }
+
+      .result-title {
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 14px;
+        color: var(--primary-dark);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #d9e9f5;
+        padding-bottom: 10px;
+      }
+
+      .result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 11px;
+        font-size: 14px;
+        color: var(--text-soft);
+      }
+
+      .result-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .value-text {
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .profit {
+        color: var(--success);
+        font-weight: 700;
+        background: var(--success-bg);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 13px;
+      }
+
+      .loss {
+        color: var(--danger);
+        font-weight: 700;
+        background: var(--danger-bg);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 13px;
+      }
+
+      .divider-row {
+        border-top: 1px dashed #c9dded !important;
+        padding-top: 12px !important;
+        margin-top: 12px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="icon-badge">🧮</div>
+        <h2>到期結算金額試算機</h2>
+        <p class="subtitle">權證到期損益快速試算</p>
+      </div>
+
+      <div class="card-block">
+        <div class="section-label">代號查詢</div>
+        <div class="form-group" style="margin-bottom: 0">
+          <label for="warrantId">權證代號</label>
+          <div class="search-row">
+            <input
+              type="text"
+              id="warrantId"
+              placeholder="例如: 03001P"
+              style="flex: 2"
+            />
+            <button
+              id="searchButton"
+              type="button"
+              onclick="getData()"
+              disabled
+            >
+              查詢代號
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">試算參數</div>
+      <div class="form-group">
+        <label for="warrantType">權證類型</label>
+        <select id="warrantType">
+          <option value="call">認購 (Call)</option>
+          <option value="put">認售 (Put)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="strikePrice">最新履約價格 (元)</label>
+        <input type="number" id="strikePrice" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label for="ratio">行使比例</label>
+        <input type="number" id="ratio" step="0.0001" />
+      </div>
+
+      <div class="form-group">
+        <label for="amount">持有張數</label>
+        <input type="number" id="amount" />
+      </div>
+
+      <div class="form-group">
+        <label for="cost">每單位買進成本 (元)</label>
+        <input type="number" id="cost" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label for="targetPrice">預估到期日標的股價 (元)</label>
+        <input type="number" id="targetPrice" step="0.1" />
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">開始計算結算金額</button>
+
+      <div class="btn-row">
+        <button
+          id="liveButton"
+          class="btn-secondary"
+          type="button"
+          onclick="getLiveTWSE()"
+          disabled
+        >
+          即時抓取證交所
+        </button>
+        <button
+          id="syncButton"
+          class="btn-secondary"
+          type="button"
+          onclick="syncData()"
+          disabled
+        >
+          更新本地數據庫
+        </button>
+      </div>
+
+      <button
+        id="shutdownButton"
+        type="button"
+        onclick="shutdownServer()"
+        disabled
+      >
+        停止服務 (釋放 Port 3001)
+      </button>
+
+      <div id="dbStatus" class="db-status">正在確認資料庫狀態...</div>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-title">試算結果</div>
+        <div class="result-item">
+          <span>每單位權證到期價值：</span>
+          <span id="resUnitValue" class="value-text">0 元</span>
+        </div>
+        <div class="result-item">
+          <span>可拿回總金額：</span>
+          <span id="resTotalReturn" class="value-text">0 元</span>
+        </div>
+        <div class="result-item">
+          <span>總投入成本：</span>
+          <span id="resTotalCost" class="value-text">0 元</span>
+        </div>
+        <div class="result-item divider-row">
+          <span>淨損益 (扣除成本)：</span>
+          <span id="resNetProfit">0 元</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function calculate() {
+        const type = document.getElementById("warrantType").value;
+        const strikePrice = parseFloat(
+          document.getElementById("strikePrice").value,
+        );
+        const ratio = parseFloat(document.getElementById("ratio").value);
+        const amount = parseFloat(document.getElementById("amount").value);
+        const cost = parseFloat(document.getElementById("cost").value);
+        const targetPrice = parseFloat(
+          document.getElementById("targetPrice").value,
+        );
+
+        const totalUnits = amount * 1000;
+        const totalCost = cost * totalUnits;
+
+        let unitValue = 0;
+        if (type === "call") {
+          unitValue = (targetPrice - strikePrice) * ratio;
+        } else {
+          unitValue = (strikePrice - targetPrice) * ratio;
+        }
+
+        if (unitValue < 0) {
+          unitValue = 0;
+        }
+
+        const totalReturn = unitValue * totalUnits;
+        const netProfit = totalReturn - totalCost;
+
+        document.getElementById("resUnitValue").innerText =
+          unitValue.toFixed(4) + " 元";
+        document.getElementById("resTotalReturn").innerText =
+          Math.round(totalReturn).toLocaleString() + " 元";
+        document.getElementById("resTotalCost").innerText =
+          Math.round(totalCost).toLocaleString() + " 元";
+
+        const profitElement = document.getElementById("resNetProfit");
+        const formattedProfit =
+          Math.round(Math.abs(netProfit)).toLocaleString() + " 元";
+
+        if (netProfit > 0) {
+          profitElement.innerText = "獲利 +" + formattedProfit;
+          profitElement.className = "profit";
+        } else if (netProfit < 0) {
+          profitElement.innerText = "虧損 -" + formattedProfit;
+          profitElement.className = "loss";
+        } else {
+          profitElement.innerText = "0 元 (損益兩平)";
+          profitElement.className = "value-text";
+        }
+
+        document.getElementById("resultBox").style.display = "block";
+      }
+
+      // 【查詢】從本地資料庫精準查詢單一權證
+      function getData() {
+        const id = document.getElementById("warrantId").value.trim();
+        if (!id) {
+          alert("請先輸入權證代號");
+          return;
+        }
+
+        fetch(`http://localhost:3001/api/warrant/${id}`)
+          .then((response) => {
+            if (response.status === 404)
+              throw new Error(
+                "資料庫中找不到該權證代號，請按下方『更新資料庫』按鈕",
+              );
+            if (!response.ok) throw new Error("代理伺服器回傳錯誤");
+            return response.json();
+          })
+          .then((warrant) => {
+            applyWarrantData(warrant);
+            console.log(`已成功從本地資料庫載入 ${id} 的最新資料！`);
+          })
+          .catch((error) => {
+            console.error("Error fetching data:", error);
+            alert(error.message || "抓取失敗，請確認後端 Proxy 是否已啟動。");
+          });
+      }
+
+      // 【即時查詢】跳過本地資料庫，直接抓取證交所全部資料並在前端篩選
+      function getLiveTWSE() {
+        const id = document.getElementById("warrantId").value.trim();
+        if (!id) {
+          alert("請先輸入權證代號");
+          return;
+        }
+
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "抓取中...";
+        btn.disabled = true;
+
+        fetch(`http://localhost:3001/api/twse-live`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (!Array.isArray(data)) throw new Error("證交所回傳格式錯誤");
+            const warrant = data.find(
+              (item) => item["權證代號"] === id || item.WarrantId === id,
+            );
+            if (warrant) {
+              applyWarrantData(warrant);
+              alert(`已成功從證交所即時抓取 ${id} 的資料！`);
+            } else {
+              alert("證交所即時資料中找不到該代號");
+            }
+          })
+          .catch((error) => {
+            alert("即時抓取失敗: " + error.message);
+          })
+          .finally(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+          });
+      }
+
+      // 共通邏輯：將抓到的權證物件填入表單
+      function applyWarrantData(warrant) {
+        // 相容不同欄位名稱（中文 vs 英文）
+        const strikePrice =
+          warrant["最新履約價格(元)/履約指數"] ||
+          warrant.strike_price ||
+          warrant.StrikePrice;
+        const typeStr =
+          warrant["權證類型"] ||
+          warrant.warrant_type ||
+          warrant.WarrantType ||
+          "";
+        const ratio =
+          warrant["最新標的履約配發數量(每仟單位權證)"] ||
+          warrant.exercise_ratio ||
+          warrant.ExerciseRatio;
+
+        if (strikePrice)
+          document.getElementById("strikePrice").value = strikePrice;
+
+        if (typeStr) {
+          document.getElementById("warrantType").value =
+            typeStr.includes("認售") || typeStr.toLowerCase().includes("put")
+              ? "put"
+              : "call";
+        }
+
+        if (ratio) {
+          // 如果是每仟單位的配發量，需除以 1000
+          const ratioVal = parseFloat(ratio);
+          document.getElementById("ratio").value =
+            ratioVal > 1 ? (ratioVal / 1000).toFixed(4) : ratioVal;
+        }
+      }
+
+      // 【同步】觸發後端更新本地 warrants.json
+      function syncData() {
+        if (!confirm("是否要從證交所下載最新資料並同步至資料庫？")) return;
+
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "同步中...";
+        btn.disabled = true;
+
+        fetch("http://localhost:3001/api/sync-warrants")
+          .then((response) => response.json())
+          .then((result) => {
+            alert(result.message || "同步成功！");
+            updateDBStatus();
+          })
+          .catch((error) => {
+            alert("同步失敗: " + error.message);
+          })
+          .finally(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+          });
+      }
+
+      // 【新增】更新頁面上的資料庫狀態顯示
+      function updateDBStatus() {
+        fetch("http://localhost:3001/api/db-status")
+          .then((res) => res.json())
+          .then((status) => {
+            const statusEl = document.getElementById("dbStatus");
+            // 伺服器啟動時，啟用功能按鈕
+            document.getElementById("warrantId").disabled = false;
+            document.getElementById("warrantType").disabled = false;
+            document.getElementById("searchButton").disabled = false;
+            document.getElementById("liveButton").disabled = false;
+            document.getElementById("syncButton").disabled = false;
+            document.getElementById("shutdownButton").disabled = false;
+
+            if (status.exists) {
+              const date = new Date(status.lastUpdated);
+              const timeStr = date.toLocaleString("zh-TW", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              });
+              statusEl.innerText = `本地數據：${status.count} 筆 | 最後更新：${timeStr}`;
+              statusEl.style.color = "";
+            } else {
+              statusEl.innerText = "本地數據：尚未建立資料庫，請點擊更新";
+              statusEl.style.color = "#e0716b";
+            }
+          })
+          .catch(() => {
+            document.getElementById("dbStatus").innerText = "伺服器未啟動";
+            document.getElementById("dbStatus").style.color = "#e0716b";
+            // 伺服器未啟動時，禁用相關功能按鈕
+            document.getElementById("warrantId").disabled = true;
+            document.getElementById("warrantType").disabled = true;
+            document.getElementById("searchButton").disabled = true;
+            document.getElementById("liveButton").disabled = true;
+            document.getElementById("syncButton").disabled = true;
+            document.getElementById("shutdownButton").disabled = true;
+          });
+      }
+
+      function shutdownServer() {
+        if (
+          !confirm(
+            "確定要停止後端 Proxy 服務嗎？停止後將無法查詢代號，需手動重新啟動。",
+          )
+        )
+          return;
+
+        fetch("http://localhost:3001/api/shutdown", { method: "POST" })
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.success) {
+              console.log(result.message);
+
+              // 2. 延遲 1.5 秒（1500毫秒）再重新整理網頁
+              // 這樣可以確保後端 process.exit(0) 已經徹底執行完畢並釋放 Port 3001
+              setTimeout(() => {
+                window.location.reload(); // 執行網頁重新整理
+              }, 1500);
+            }
+          })
+          .catch((error) => {
+            console.error("Shutdown error:", error);
+            alert("無法連接到伺服器，可能伺服器原本就已經是關閉狀態。");
+          });
+      }
+
+      // 頁面載入時先執行一次狀態檢查
+      window.onload = updateDBStatus;
+    </script>
+  </body>
+</html>

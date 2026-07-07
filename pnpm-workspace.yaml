@@ -1,0 +1,4 @@
+allowBuilds:
+  '@vscode/sqlite3': false
+  better-sqlite3: false
+  sqlite3: false

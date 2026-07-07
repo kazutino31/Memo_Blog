@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>筆記網站</title>
+    <title>Note</title>
     <script>
       // GitHub Pages SPA fallback：還原 404.html 編碼過的路徑，讓 BrowserRouter 接手
       (function (l) {
@@ -23,6 +23,18 @@
           );
         }
       })(window.location);
+
+      (function () {
+        var stored = localStorage.getItem("theme"); // 'light' | 'dark' | 'system' | null
+        var theme = stored || "system";
+        var resolved =
+          theme === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : theme;
+        document.documentElement.setAttribute("data-theme", resolved);
+      })();
     </script>
   </head>
   <body>

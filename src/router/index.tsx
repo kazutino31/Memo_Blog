@@ -5,6 +5,7 @@ import ArticlePage from "@/pages/ArticlePage";
 import CategoryPage from "@/pages/CategoryPage";
 import TagPage from "@/pages/TagPage";
 import SeriesPage from "@/pages/SeriesPage";
+import WarrantsCalculator from "@/pages/WarrantsCalculator";
 
 export const router = createBrowserRouter(
   [
@@ -16,6 +17,7 @@ export const router = createBrowserRouter(
         { path: "/category/:category", element: <CategoryPage /> },
         { path: "/tags/:tag", element: <TagPage /> },
         { path: "/series/:series", element: <SeriesPage /> },
+        { path: "/calculator", element: <WarrantsCalculator /> },
       ],
     },
   ],

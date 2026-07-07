@@ -1,0 +1,138 @@
+/* 文章內文（Markdown 渲染結果）專屬樣式，因需要巢狀元素選取器，
+   不適合拆成 Tailwind utility class，故保留為元件層級 CSS Module。 */
+
+.prose {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.prose h1 {
+  font-size: 1.6em;
+  margin: 1.6em 0 0.6em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.prose h2 {
+  font-size: 1.36em;
+  margin: 1.9em 0 0.6em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-top: 0.1em;
+}
+.prose h3 {
+  font-size: 1.12em;
+  margin: 1.6em 0 0.5em;
+  font-weight: 600;
+  font-family: var(--sans);
+}
+.prose h4 {
+  margin: 1.4em 0 0.4em;
+  font-weight: 700;
+  font-family: var(--sans);
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.8em;
+}
+.prose p {
+  margin: 0 0 1.3em;
+}
+.prose strong {
+  font-weight: 700;
+}
+.prose > ul,
+.prose > ol {
+  margin: 0 0 1.3em;
+  padding-left: 1.4em;
+}
+.prose li {
+  margin-bottom: 0.5em;
+}
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.5em;
+}
+.prose a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 2px;
+}
+.prose blockquote {
+  margin: 1.6em 0;
+  padding: 2px 0 2px 20px;
+  border-left: 3px solid var(--accent);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 3em 0;
+}
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  background: var(--code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: #a6431f;
+}
+.prose pre {
+  background: #1e1e1c;
+  color: #e8e6e1;
+  border-radius: 8px;
+  padding: 20px 22px;
+  overflow-x: auto;
+  margin: 1.6em 0;
+  font-family: var(--sans);
+}
+.prose pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: var(--mono);
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.8em 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  display: block;
+  overflow-x: auto;
+}
+.prose th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  padding: 0 16px 10px 0;
+  border-bottom: 2px solid var(--ink);
+}
+.prose td {
+  padding: 14px 16px 14px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  color: var(--ink-soft);
+}
+.prose tr:last-child td {
+  border-bottom: 1px solid var(--rule-strong);
+}
+.prose input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: var(--accent);
+}
+.prose li:has(input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+[data-theme="dark"] .prose img {
+  filter: brightness(0.85) contrast(1.05);
+  border-radius: 8px;
+}

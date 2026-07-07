@@ -12,18 +12,20 @@ export function SeriesNav({
   if (others.length === 0) return null;
 
   return (
-    <div className="series-nav">
+    <div className="mx-auto flex max-w-[var(--maxw)] flex-col px-6 pb-[100px]">
       {others.map((note) => (
         <Link
-          className="series-nav-item"
+          className="group flex cursor-pointer items-center justify-between border-t border-[var(--rule)] py-6 text-inherit no-underline"
           to={`/notes/${note.slug}`}
           key={note.slug}
         >
           <div>
-            <div className="sns">
+            <div className="text-[13px] tracking-wide text-[var(--ink-faint)] uppercase">
               系列第 {note.seriesOrder ?? "?"} 篇・{note.category}
             </div>
-            <div className="snl">{note.title}</div>
+            <div className="text-lg font-semibold [font-family:var(--serif)] group-hover:text-[var(--accent-ink)]">
+              {note.title}
+            </div>
           </div>
           <svg
             width="18"

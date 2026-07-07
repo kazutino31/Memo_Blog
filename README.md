@@ -94,4 +94,4 @@ draft: false
 
 ## 部署
 
-本專案設定 `base: "/Memo_Blog/"`（見 [vite.config.ts](vite.config.ts)），並搭配 [public/404.html](public/404.html) 處理 GitHub Pages 上 SPA 路由找不到路徑時的重導向。
+本專案設定 `base: "/Memo-Blog/"`（見 [vite.config.ts](vite.config.ts)），並搭配 [public/404.html](public/404.html) 處理 GitHub Pages 上 SPA 路由找不到路徑時的重導向。
