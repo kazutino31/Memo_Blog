@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils";
 interface Warrant {
   權證代號?: string;
   WarrantId?: string;
+  權證名稱?: string;
+  warrant_name?: string;
+  WarrantName?: string;
   "最新履約價格(元)/履約指數"?: string | number;
   strike_price?: string | number;
   StrikePrice?: string | number;
@@ -24,6 +27,7 @@ interface DBStatus {
 
 export default function WarrantsCalculator() {
   const [warrantId, setWarrantId] = useState("");
+  const [warrantName, setWarrantName] = useState("");
   const [type, setType] = useState<"call" | "put">("call");
   const [strikePrice, setStrikePrice] = useState<number | "">("");
   const [ratio, setRatio] = useState<number | "">("");
@@ -46,6 +50,11 @@ export default function WarrantsCalculator() {
   useEffect(() => {
     updateDBStatus();
   }, []);
+
+  // 當代號改變時，清除舊的名稱顯示
+  useEffect(() => {
+    setWarrantName("");
+  }, [warrantId]);
 
   const updateDBStatus = async () => {
     try {
@@ -83,8 +92,11 @@ export default function WarrantsCalculator() {
       warrant["最新標的履約配發數量(每仟單位權證)"] ||
       warrant.exercise_ratio ||
       warrant.ExerciseRatio;
+    const wName =
+      warrant["權證名稱"] || warrant.warrant_name || warrant.WarrantName || "";
 
     if (sPrice) setStrikePrice(Number(sPrice));
+    if (wName) setWarrantName(String(wName));
     if (tStr) {
       setType(
         tStr.includes("認售") || tStr.toLowerCase().includes("put")
@@ -265,6 +277,17 @@ export default function WarrantsCalculator() {
                 </button>
               </div>
             </div>
+
+            {warrantName && (
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-semibold text-[#7691a8]">
+                  權證名稱
+                </label>
+                <div className="rounded-[7px] border border-[#dce8f1] bg-white/50 px-3 py-2.5 text-[15px] font-medium text-[#33475b]">
+                  {warrantName}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
