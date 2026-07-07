@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Calculator } from "lucide-react";
+import { Calculator, CircleAlert ,TriangleAlert } from 'lucide-react';
 
 // Define the warrant interface based on the HTML logic
 interface Warrant {
@@ -29,6 +29,15 @@ interface DBStatus {
   lastUpdated: string;
 }
 
+// 建立表單欄位錯誤提示的 interface
+interface FormErrors {
+  strikePrice?: boolean;
+  ratio?: boolean;
+  amount?: boolean;
+  cost?: boolean;
+  targetPrice?: boolean;
+}
+
 export default function WarrantsCalculator() {
   const [warrantId, setWarrantId] = useState("");
   const [warrantName, setWarrantName] = useState("");
@@ -49,6 +58,9 @@ export default function WarrantsCalculator() {
   const [isStockSyncing, setIsStockSyncing] = useState(false);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
+
+  // 新增錯誤卡控狀態
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const [result, setResult] = useState<{
     unitValue: number;
@@ -98,7 +110,7 @@ export default function WarrantsCalculator() {
       setDbExists(false);
       setDbStatus("伺服器未啟動");
     }
-  };
+  }
 
   async function updateStockDBStatus() {
     try {
@@ -123,7 +135,7 @@ export default function WarrantsCalculator() {
     } catch {
       setStockDbStatus("無法獲取股價資料庫狀態");
     }
-  };
+  }
 
   const fetchStockPrice = async (assetName: string) => {
     try {
@@ -137,9 +149,10 @@ export default function WarrantsCalculator() {
         (s: any) => s["Name"] === assetName || s["Code"] === assetName,
       );
       if (stock && stock["ClosingPrice"] && stock["ClosingPrice"] !== "--") {
-        // 處理可能的千分位逗號，例如 "1,234.50"
         const cleanPrice = String(stock["ClosingPrice"]).replace(/,/g, "");
         setUnderlyingPrice(Number(cleanPrice));
+        // 自動帶入時清除 targetPrice 的錯誤提示
+        setErrors((prev) => ({ ...prev, targetPrice: false }));
       }
     } catch (err) {
       console.error("抓取股價失敗", err);
@@ -165,7 +178,10 @@ export default function WarrantsCalculator() {
       warrant.UnderlyingAsset ||
       "";
 
-    if (sPrice) setStrikePrice(Number(sPrice));
+    if (sPrice) {
+      setStrikePrice(Number(sPrice));
+      setErrors((prev) => ({ ...prev, strikePrice: false }));
+    }
     if (wName) setWarrantName(String(wName));
     if (uAsset) fetchStockPrice(String(uAsset));
     if (tStr) {
@@ -180,6 +196,7 @@ export default function WarrantsCalculator() {
       setRatio(
         parsedRatio > 1 ? Number((parsedRatio / 1000).toFixed(4)) : parsedRatio,
       );
+      setErrors((prev) => ({ ...prev, ratio: false }));
     }
   };
 
@@ -269,36 +286,27 @@ export default function WarrantsCalculator() {
     }
   };
 
-  // const shutdownServer = async () => {
-  //   if (
-  //     !confirm(
-  //       "確定要停止後端 Proxy 服務嗎？停止後將無法查詢代號，需手動重新啟動。",
-  //     )
-  //   )
-  //     return;
-  //   try {
-  //     const response = await fetch(
-  //       "https://memo-blog.onrender.com/api/shutdown",
-  //       {
-  //         method: "POST",
-  //       },
-  //     );
-  //     const result = await response.json();
-  //     if (result.success) {
-  //       alert("伺服器已停止");
-  //       setTimeout(() => window.location.reload(), 1500);
-  //     }
-  //   } catch {
-  //     alert("無法連接到伺服器，可能伺服器原本就已經是關閉狀態。");
-  //   }
-  // };
-
   const calculate = () => {
+    // 表單卡控驗證
+    const newErrors: FormErrors = {
+      strikePrice: strikePrice === "",
+      ratio: ratio === "",
+      amount: amount === "",
+      cost: cost === "",
+      targetPrice: targetPrice === "" && underlyingPrice === null, // 若無手動預估，且無參考股價時報錯
+    };
+
+    setErrors(newErrors);
+
+    // 如果有任何一欄沒填，阻擋計算
+    if (Object.values(newErrors).some((isError) => isError)) {
+      return;
+    }
+
     const sP = Number(strikePrice);
     const r = Number(ratio);
     const a = Number(amount);
     const c = Number(cost);
-    // 優先使用預估股價，若為空則套用參考股價
     const tP = targetPrice !== "" ? Number(targetPrice) : underlyingPrice || 0;
 
     const totalUnits = a * 1000;
@@ -317,7 +325,6 @@ export default function WarrantsCalculator() {
     const netProfit = totalReturn - totalCost;
     const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
 
-    // 計算損益平衡點 (標的股價達到此值時損益兩平)
     const costPerUnit = c;
     const breakeven =
       type === "call" ? sP + costPerUnit / r : sP - costPerUnit / r;
@@ -403,7 +410,10 @@ export default function WarrantsCalculator() {
                     {underlyingPrice}
                   </div>
                   <button
-                    onClick={() => setTargetPrice(underlyingPrice)}
+                    onClick={() => {
+                      setTargetPrice(underlyingPrice);
+                      setErrors((prev) => ({ ...prev, targetPrice: false }));
+                    }}
                     className="rounded-[7px] bg-emerald-600 px-3 py-2.5 text-[12px] font-bold text-white transition hover:bg-emerald-700"
                   >
                     帶入試算
@@ -414,7 +424,8 @@ export default function WarrantsCalculator() {
                     (type === "put" &&
                       underlyingPrice > Number(strikePrice))) && (
                     <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
-                      ⚠️ 目前為價外，若維持此股價，到期結算價值將歸零。
+                      <TriangleAlert className="inline-block h-4 w-4" />
+                      目前為價外，若維持此股價，到期結算價值將歸零。
                     </div>
                   )}
               </div>
@@ -442,90 +453,164 @@ export default function WarrantsCalculator() {
             </select>
           </div>
 
+          {/* 最新履約價格 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-[#7691a8]">
-              最新履約價格 (元)
+              最新履約價格 (元) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               value={strikePrice}
-              onChange={(e) =>
+              onChange={(e) => {
                 setStrikePrice(
                   e.target.value === "" ? "" : Number(e.target.value),
-                )
-              }
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
+                );
+                if (e.target.value !== "") {
+                  setErrors((prev) => ({ ...prev, strikePrice: false }));
+                }
+              }}
+              className={cn(
+                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                errors.strikePrice
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+              )}
             />
+            {errors.strikePrice && (
+              <p className="text-[11.5px] font-medium text-red-500">
+                請輸入最新履約價格
+              </p>
+            )}
           </div>
 
+          {/* 行使比例 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-[#7691a8]">
-              行使比例
+              行使比例 <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.0001"
               value={ratio}
-              onChange={(e) =>
-                setRatio(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
+              onChange={(e) => {
+                setRatio(e.target.value === "" ? "" : Number(e.target.value));
+                if (e.target.value !== "") {
+                  setErrors((prev) => ({ ...prev, ratio: false }));
+                }
+              }}
+              className={cn(
+                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                errors.ratio
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+              )}
             />
+            {errors.ratio && (
+              <p className="text-[11.5px] font-medium text-red-500">
+                請輸入行使比例
+              </p>
+            )}
           </div>
 
+          {/* 持有張數 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-[#7691a8]">
-              持有張數
+              持有張數 <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={amount}
-              onChange={(e) =>
-                setAmount(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
+              onChange={(e) => {
+                setAmount(e.target.value === "" ? "" : Number(e.target.value));
+                if (e.target.value !== "") {
+                  setErrors((prev) => ({ ...prev, amount: false }));
+                }
+              }}
+              className={cn(
+                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                errors.amount
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+              )}
             />
+            {errors.amount && (
+              <p className="text-[11.5px] font-medium text-red-500">
+                請輸入持有張數
+              </p>
+            )}
           </div>
 
+          {/* 每單位買進成本 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-[#7691a8]">
-              每單位買進成本 (元)
+              每單位買進成本 (元) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               value={cost}
-              onChange={(e) =>
-                setCost(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
+              onChange={(e) => {
+                setCost(e.target.value === "" ? "" : Number(e.target.value));
+                if (e.target.value !== "") {
+                  setErrors((prev) => ({ ...prev, cost: false }));
+                }
+              }}
+              className={cn(
+                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                errors.cost
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+              )}
             />
+            {errors.cost && (
+              <p className="text-[11.5px] font-medium text-red-500">
+                請輸入每單位買進成本
+              </p>
+            )}
           </div>
 
+          {/* 預估到期日標的股價 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-[#7691a8]">
-              預估到期日標的股價 (元)
+              預估到期日標的股價 (元) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               step="0.1"
               value={targetPrice}
-              onChange={(e) =>
+              onChange={(e) => {
                 setTargetPrice(
                   e.target.value === "" ? "" : Number(e.target.value),
-                )
+                );
+                if (e.target.value !== "" || underlyingPrice !== null) {
+                  setErrors((prev) => ({ ...prev, targetPrice: false }));
+                }
+              }}
+              placeholder={
+                underlyingPrice ? `未填則帶入參考價 ${underlyingPrice}` : ""
               }
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none"
+              className={cn(
+                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                errors.targetPrice
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+              )}
             />
-            {/* 針對手動輸入的預估股價進行價外提醒 */}
+            {errors.targetPrice && (
+              <p className="text-[11.5px] font-medium text-red-500">
+                請輸入預估股價或由上方帶入參考價
+              </p>
+            )}
+
             {targetPrice !== "" &&
               strikePrice !== "" &&
               ((type === "call" && Number(targetPrice) < Number(strikePrice)) ||
                 (type === "put" &&
                   Number(targetPrice) > Number(strikePrice))) && (
                 <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
-                  ⚠️ 預估值為價外，若以此股價結算，價值將歸零。
+                  <TriangleAlert className="inline-block h-4 w-4" />
+                  預估值為價外，若以此股價結算，價值將歸零。
                 </div>
               )}
           </div>
