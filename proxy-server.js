@@ -3,7 +3,7 @@ import cors from "cors";
 import fs from "fs"; // Node.js 內建的檔案系統模組，不需額外安裝
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const DB_DIR = "./db";
 const JSON_FILE_PATH = `${DB_DIR}/warrants.json`;
 
@@ -130,6 +130,4 @@ app.post("/api/shutdown", (req, res) => {
   }, 1000);
 });
 
-app.listen(PORT, () =>
-  console.log(`JSON Proxy 伺服器運行於 http://localhost:${PORT}`),
-);
+app.listen(PORT, () => console.log(`Proxy 伺服器運行於埠口 ${PORT}`));

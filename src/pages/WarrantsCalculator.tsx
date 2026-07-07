@@ -49,7 +49,7 @@ export default function WarrantsCalculator() {
 
   const updateDBStatus = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/db-status");
+      const res = await fetch("https://memo-blog.onrender.com/api/db-status");
       const status: DBStatus = await res.json();
       setDbExists(true);
       if (status.exists) {
@@ -108,7 +108,7 @@ export default function WarrantsCalculator() {
     setIsSearching(true);
     try {
       const response = await fetch(
-        `http://localhost:3001/api/warrant/${warrantId.trim()}`,
+        `https://memo-blog.onrender.com/api/warrant/${warrantId.trim()}`,
       );
       if (response.status === 404)
         throw new Error("資料庫中找不到該權證代號，請按下方『更新資料庫』按鈕");
@@ -129,7 +129,9 @@ export default function WarrantsCalculator() {
     }
     setIsLiveFetching(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/twse-live`);
+      const response = await fetch(
+        `https://memo-blog.onrender.com/api/twse-live`,
+      );
       const data = await response.json();
       if (!Array.isArray(data)) throw new Error("證交所回傳格式錯誤");
       const warrant = data.find(
@@ -154,7 +156,9 @@ export default function WarrantsCalculator() {
     if (!confirm("是否要從證交所下載最新資料並同步至資料庫？")) return;
     setIsSyncing(true);
     try {
-      const response = await fetch("http://localhost:3001/api/sync-warrants");
+      const response = await fetch(
+        "https://memo-blog.onrender.com/api/sync-warrants",
+      );
       const result = await response.json();
       alert(result.message || "同步成功！");
       updateDBStatus();
@@ -173,9 +177,12 @@ export default function WarrantsCalculator() {
     )
       return;
     try {
-      const response = await fetch("http://localhost:3001/api/shutdown", {
-        method: "POST",
-      });
+      const response = await fetch(
+        "https://memo-blog.onrender.com/api/shutdown",
+        {
+          method: "POST",
+        },
+      );
       const result = await response.json();
       if (result.success) {
         alert("伺服器已停止");
