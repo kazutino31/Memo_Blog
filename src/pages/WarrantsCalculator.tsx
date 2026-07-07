@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Calculator } from "lucide-react";
 
 // Define the warrant interface based on the HTML logic
 interface Warrant {
@@ -42,6 +43,7 @@ export default function WarrantsCalculator() {
   const [stockDbStatus, setStockDbStatus] =
     useState<string>("正在確認股價資料...");
   const [dbExists, setDbExists] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isStockSyncing, setIsStockSyncing] = useState(false);
@@ -58,8 +60,13 @@ export default function WarrantsCalculator() {
   } | null>(null);
 
   useEffect(() => {
-    updateDBStatus();
-    updateStockDBStatus();
+    const initializeStatus = async () => {
+      setIsInitializing(true);
+      await Promise.allSettled([updateDBStatus(), updateStockDBStatus()]);
+      setIsInitializing(false);
+    };
+
+    initializeStatus();
   }, []);
 
   // 當代號改變時，清除舊的名稱顯示
@@ -68,7 +75,7 @@ export default function WarrantsCalculator() {
     setUnderlyingPrice(null);
   }, [warrantId]);
 
-  const updateDBStatus = async () => {
+  async function updateDBStatus() {
     try {
       const res = await fetch("https://memo-blog.onrender.com/api/db-status");
       const status: DBStatus = await res.json();
@@ -93,7 +100,7 @@ export default function WarrantsCalculator() {
     }
   };
 
-  const updateStockDBStatus = async () => {
+  async function updateStockDBStatus() {
     try {
       const res = await fetch(
         "https://memo-blog.onrender.com/api/stock-status",
@@ -330,7 +337,7 @@ export default function WarrantsCalculator() {
       <div className="mx-auto w-full max-w-[480px] rounded-[18px] border border-[#e8f0f6] bg-white p-8 pt-9 pb-7 shadow-[0_20px_40px_-20px_rgba(91,147,196,0.25),0_4px_10px_-4px_rgba(91,147,196,0.12)]">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#eaf3fa] to-[#dcebf6] text-[22px]">
-            🧮
+            <Calculator size={22} className="text-[#5b93c4]" />
           </div>
           <h2 className="mb-1 text-xl font-bold tracking-tight text-[#2c4258]">
             到期結算金額試算機
@@ -339,6 +346,13 @@ export default function WarrantsCalculator() {
             權證到期損益快速試算
           </p>
         </div>
+
+        {isInitializing && (
+          <div className="mb-5 flex items-center justify-center gap-2 rounded-[10px] border border-[#dce8f1] bg-[#eef6fb] px-4 py-3 text-[13px] font-medium text-[#3b6e95]">
+            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            連線中，正在載入資料狀態...
+          </div>
+        )}
 
         <div className="mb-5 rounded-[10px] border border-[#e8f0f6] bg-[#f2f7fb] p-5">
           <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-[#4a7cab] uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-[#5b93c4] before:content-['']">
@@ -614,7 +628,7 @@ export default function WarrantsCalculator() {
                     disabled={!dbExists || isLiveFetching}
                     className="flex-1 rounded-[7px] bg-[#79a6cf] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#6893bd] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
                   >
-                    {isLiveFetching ? "抓取中..." : "即時證交所"}
+                    {isLiveFetching ? "抓取中..." : "即時查詢證交所"}
                   </button>
                   <button
                     onClick={syncData}
