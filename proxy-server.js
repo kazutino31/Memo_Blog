@@ -6,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DB_DIR = "./db";
 const JSON_FILE_PATH = `${DB_DIR}/warrants.json`;
+const STOCK_JSON_FILE_PATH = `${DB_DIR}/stockDayAll.json`;
 
 app.use(cors());
 
@@ -50,6 +51,44 @@ app.all("/api/sync-warrants", async (req, res) => {
   }
 });
 
+// 從證交所下載個股資料，並寫入 stockDayAll.json
+app.all("/api/sync-stocks", async (req, res) => {
+  console.log("收到個股同步請求...");
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+
+    const response = await fetch(
+      "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      },
+    );
+    if (!response.ok) throw new Error("證交所連線失敗");
+
+    const stockData = await response.json();
+    console.log(`成功同步 ${stockData.length} 筆個股資料`);
+
+    fs.writeFileSync(
+      STOCK_JSON_FILE_PATH,
+      JSON.stringify(stockData, null, 2),
+      "utf-8",
+    );
+
+    res.json({
+      success: true,
+      message: `成功同步 ${stockData.length} 筆個股資料至本地 JSON！`,
+    });
+  } catch (error) {
+    console.error("個股同步失敗:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 直接抓取證交所即時資料 (不存檔)
 app.get("/api/twse-live", async (req, res) => {
   try {
@@ -69,9 +108,15 @@ app.get("/api/twse-live", async (req, res) => {
   }
 });
 
-// 獲取所有個股日收盤價資訊 (STOCK_DAY_ALL)
+// 獲取所有個股日收盤價資訊 (優先讀取本地，若無則報錯)
 app.get("/api/stock-live", async (req, res) => {
   try {
+    if (fs.existsSync(STOCK_JSON_FILE_PATH)) {
+      const rawData = fs.readFileSync(STOCK_JSON_FILE_PATH, "utf-8");
+      return res.json(JSON.parse(rawData));
+    }
+
+    // 如果本地沒有，則動態抓取一次 (不存檔)
     const response = await fetch(
       "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
       {
@@ -84,6 +129,27 @@ app.get("/api/stock-live", async (req, res) => {
     if (!response.ok) throw new Error("證交所個股資料讀取失敗");
     const data = await response.json();
     res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 獲取本地個股數據庫狀態
+app.get("/api/stock-status", (req, res) => {
+  try {
+    if (!fs.existsSync(STOCK_JSON_FILE_PATH)) {
+      return res.json({ exists: false });
+    }
+
+    const stats = fs.statSync(STOCK_JSON_FILE_PATH);
+    const rawData = fs.readFileSync(STOCK_JSON_FILE_PATH, "utf-8");
+    const stocks = JSON.parse(rawData);
+
+    res.json({
+      exists: true,
+      lastUpdated: stats.mtime,
+      count: stocks.length,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

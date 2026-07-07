@@ -39,10 +39,14 @@ export default function WarrantsCalculator() {
   const [cost, setCost] = useState<number | "">("");
   const [targetPrice, setTargetPrice] = useState<number | "">("");
   const [dbStatus, setDbStatus] = useState<string>("正在確認資料庫狀態...");
+  const [stockDbStatus, setStockDbStatus] =
+    useState<string>("正在確認股價資料...");
   const [dbExists, setDbExists] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isStockSyncing, setIsStockSyncing] = useState(false);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
+  const [isManagementOpen, setIsManagementOpen] = useState(false);
 
   const [result, setResult] = useState<{
     unitValue: number;
@@ -53,6 +57,7 @@ export default function WarrantsCalculator() {
 
   useEffect(() => {
     updateDBStatus();
+    updateStockDBStatus();
   }, []);
 
   // 當代號改變時，清除舊的名稱顯示
@@ -76,13 +81,38 @@ export default function WarrantsCalculator() {
           minute: "2-digit",
           second: "2-digit",
         });
-        setDbStatus(`本地數據：${status.count} 筆 | 最後更新：${timeStr}`);
+        setDbStatus(`權證數據：${status.count} 筆 | 最後更新：${timeStr}`);
       } else {
-        setDbStatus("本地數據：尚未建立資料庫，請點擊更新");
+        setDbStatus("權證數據：尚未建立資料庫，請點擊更新");
       }
     } catch {
       setDbExists(false);
       setDbStatus("伺服器未啟動");
+    }
+  };
+
+  const updateStockDBStatus = async () => {
+    try {
+      const res = await fetch(
+        "https://memo-blog.onrender.com/api/stock-status",
+      );
+      const status: DBStatus = await res.json();
+      if (status.exists) {
+        const date = new Date(status.lastUpdated);
+        const timeStr = date.toLocaleString("zh-TW", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        setStockDbStatus(`標的数据：${status.count} 筆 | 最後更新：${timeStr}`);
+      } else {
+        setStockDbStatus("標的数据：尚未建立資料庫，請更新股價");
+      }
+    } catch {
+      setStockDbStatus("無法獲取股價資料庫狀態");
     }
   };
 
@@ -93,11 +123,14 @@ export default function WarrantsCalculator() {
       );
       if (!response.ok) return;
       const stocks = await response.json();
+
       const stock = stocks.find(
-        (s: any) => s["證券名稱"] === assetName || s["證券代號"] === assetName,
+        (s: any) => s["Name"] === assetName || s["Code"] === assetName,
       );
-      if (stock && stock["收盤價"] && stock["收盤價"] !== "--") {
-        setUnderlyingPrice(Number(stock["收盤價"]));
+      if (stock && stock["ClosingPrice"] && stock["ClosingPrice"] !== "--") {
+        // 處理可能的千分位逗號，例如 "1,234.50"
+        const cleanPrice = String(stock["ClosingPrice"]).replace(/,/g, "");
+        setUnderlyingPrice(Number(cleanPrice));
       }
     } catch (err) {
       console.error("抓取股價失敗", err);
@@ -207,6 +240,23 @@ export default function WarrantsCalculator() {
       alert("同步失敗: " + error.message);
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const syncStocks = async () => {
+    if (!confirm("是否要從證交所下載最新個股/標的收盤價？")) return;
+    setIsStockSyncing(true);
+    try {
+      const response = await fetch(
+        "https://memo-blog.onrender.com/api/sync-stocks",
+      );
+      const result = await response.json();
+      alert(result.message || "股價同步成功！");
+      updateStockDBStatus();
+    } catch (error: any) {
+      alert("股價同步失敗: " + error.message);
+    } finally {
+      setIsStockSyncing(false);
     }
   };
 
@@ -444,38 +494,69 @@ export default function WarrantsCalculator() {
             開始計算結算金額
           </button>
 
-          <div className="flex gap-2 pt-3">
+          <div className="mt-6 border-t border-[#e8f0f6] pt-4">
             <button
-              onClick={getLiveTWSE}
-              disabled={!dbExists || isLiveFetching}
-              className="flex-1 rounded-[7px] bg-[#79a6cf] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#6893bd] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+              onClick={() => setIsManagementOpen(!isManagementOpen)}
+              className="flex w-full items-center justify-between text-[13px] font-bold text-[#7691a8] transition hover:text-[#5b93c4]"
             >
-              {isLiveFetching ? "抓取中..." : "即時抓取證交所"}
+              <span className="flex items-center gap-1.5 uppercase tracking-widest before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-[#5b93c4] before:content-['']">
+                數據維護與同步
+              </span>
+              <span
+                className={cn(
+                  "transition-transform duration-300",
+                  isManagementOpen ? "rotate-180" : "",
+                )}
+              >
+                ▼
+              </span>
             </button>
-            <button
-              onClick={syncData}
-              disabled={!dbExists || isSyncing}
-              className="flex-1 rounded-[7px] bg-[#98b3c9] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#86a2b9] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-300",
+                isManagementOpen
+                  ? "mt-4 max-h-[500px] opacity-100"
+                  : "max-h-0 opacity-0",
+              )}
             >
-              {isSyncing ? "同步中..." : "更新本地數據庫"}
-            </button>
-          </div>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={getLiveTWSE}
+                    disabled={!dbExists || isLiveFetching}
+                    className="flex-1 rounded-[7px] bg-[#79a6cf] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#6893bd] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                  >
+                    {isLiveFetching ? "抓取中..." : "即時證交所"}
+                  </button>
+                  <button
+                    onClick={syncData}
+                    disabled={!dbExists || isSyncing}
+                    className="flex-1 rounded-[7px] bg-[#98b3c9] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#86a2b9] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                  >
+                    {isSyncing ? "同步中..." : "同步權證庫"}
+                  </button>
+                </div>
 
-          {/* <button
-            onClick={shutdownServer}
-            disabled={!dbExists}
-            className="mt-3 w-full rounded-[7px] border border-[#dce8f1] bg-transparent p-2.5 text-[12.5px] font-semibold text-[#a9bccb] transition hover:border-[#f3d3d1] hover:bg-[#fdeeed] hover:text-[#e0716b] disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
-          >
-            停止服務 (釋放 Port)
-          </button> */}
+                <button
+                  onClick={syncStocks}
+                  disabled={!dbExists || isStockSyncing}
+                  className="w-full rounded-[7px] bg-[#a8c5da] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#92afc5] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                >
+                  {isStockSyncing ? "同步中..." : "更新標的收盤價"}
+                </button>
 
-          <div
-            className={cn(
-              "mt-2.5 text-center text-[11.5px] text-[#a9bccb]",
-              !dbExists && "text-[#e0716b]",
-            )}
-          >
-            {dbStatus}
+                <div
+                  className={cn(
+                    "flex flex-col gap-1 text-center text-[11px] leading-relaxed text-[#a9bccb]",
+                    !dbExists && "text-[#e0716b]",
+                  )}
+                >
+                  <div>{dbStatus}</div>
+                  <div>{stockDbStatus}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {result && (
