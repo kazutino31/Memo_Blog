@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface Warrant {
   權證代號?: string;
   WarrantId?: string;
-  權證名稱?: string;
+  權證簡稱?: string;
   warrant_name?: string;
   WarrantName?: string;
   "最新履約價格(元)/履約指數"?: string | number;
@@ -93,7 +93,7 @@ export default function WarrantsCalculator() {
       warrant.exercise_ratio ||
       warrant.ExerciseRatio;
     const wName =
-      warrant["權證名稱"] || warrant.warrant_name || warrant.WarrantName || "";
+      warrant["權證簡稱"] || warrant.warrant_name || warrant.WarrantName || "";
 
     if (sPrice) setStrikePrice(Number(sPrice));
     if (wName) setWarrantName(String(wName));
