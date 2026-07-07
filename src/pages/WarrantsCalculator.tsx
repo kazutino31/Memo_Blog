@@ -107,9 +107,9 @@ export default function WarrantsCalculator() {
           minute: "2-digit",
           second: "2-digit",
         });
-        setStockDbStatus(`標的数据：${status.count} 筆 | 最後更新：${timeStr}`);
+        setStockDbStatus(`標的數據：${status.count} 筆 | 最後更新：${timeStr}`);
       } else {
-        setStockDbStatus("標的数据：尚未建立資料庫，請更新股價");
+        setStockDbStatus("標的數據：尚未建立資料庫，請更新股價");
       }
     } catch {
       setStockDbStatus("無法獲取股價資料庫狀態");
