@@ -370,7 +370,7 @@ export default function WarrantsCalculator() {
           </div>
         )}
 
-        <div className="mb-5 rounded-[10px] border border-rule bg-muted/50 p-5">
+        <div className="mb-5 rounded-[10px] border border-rule bg-muted/20 p-5">
           <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-brand uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-brand before:content-['']">
             代號查詢
           </div>
@@ -391,9 +391,9 @@ export default function WarrantsCalculator() {
                 <button
                   onClick={getData}
                   disabled={!dbExists || isSearching}
-                  className="flex-1 rounded-[7px] bg-secondary px-2 py-2.5 text-[13.5px] font-semibold text-secondary-foreground transition hover:opacity-80 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-ink-faint"
+                  className="flex-1 rounded-[7px] bg-secondary px-2 py-2.5 text-[13.5px] font-semibold text-secondary-foreground transition hover:bg-ring/30 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-ink-faint"
                 >
-                  {isSearching ? "搜尋中..." : "查詢代號"}
+                  {isSearching ? "搜尋中..." : "查詢"}
                 </button>
               </div>
             </div>

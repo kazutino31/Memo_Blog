@@ -191,4 +191,14 @@
       color 0.2s ease;
     @apply bg-background text-foreground;
   }
+
+  button,
+  select {
+    @apply cursor-pointer;
+  }
+
+  button:disabled,
+  select:disabled {
+    @apply cursor-default;
+  }
 }
