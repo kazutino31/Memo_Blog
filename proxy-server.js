@@ -1,10 +1,9 @@
 import express from "express";
 import cors from "cors";
-import apiRouter from "./routes/api.js"; 
+import apiRouter from "@/routes/api.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
 
 app.use(cors());
 app.use(express.json()); // 送 JSON body 時解析
