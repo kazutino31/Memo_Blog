@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Calculator, TriangleAlert } from 'lucide-react';
+import { Calculator, TriangleAlert } from "lucide-react";
 
 // Define the warrant interface based on the HTML logic
 interface Warrant {
@@ -80,12 +80,6 @@ export default function WarrantsCalculator() {
 
     initializeStatus();
   }, []);
-
-  // 當代號改變時，清除舊的名稱顯示
-  useEffect(() => {
-    setWarrantName("");
-    setUnderlyingPrice(null);
-  }, [warrantId]);
 
   async function updateDBStatus() {
     try {
@@ -210,8 +204,7 @@ export default function WarrantsCalculator() {
       const response = await fetch(
         `https://memo-blog.onrender.com/api/warrant/${warrantId.trim()}`,
       );
-      if (response.status === 404)
-        throw new Error("資料庫中找不到該權證代號，請按下方『更新資料庫』按鈕");
+      if (response.status === 404) throw new Error("找不到該權證代號");
       if (!response.ok) throw new Error("代理伺服器回傳錯誤");
       const warrant = await response.json();
       applyWarrantData(warrant);
@@ -339,6 +332,22 @@ export default function WarrantsCalculator() {
     });
   };
 
+  // 代號改變重置表單
+  const handleWarrantIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    if (value !== warrantId) {
+      setWarrantId(value);
+
+      setWarrantName("");
+      setUnderlyingPrice(null);
+      setStrikePrice("");
+      setRatio("");
+      setResult(null);
+      setErrors({});
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e9f2f9] via-[#f6fafd] to-[#f6fafd] px-5 py-12">
       <div className="mx-auto w-full max-w-[480px] rounded-[18px] border border-[#e8f0f6] bg-white p-8 pt-9 pb-7 shadow-[0_20px_40px_-20px_rgba(91,147,196,0.25),0_4px_10px_-4px_rgba(91,147,196,0.12)]">
@@ -374,7 +383,7 @@ export default function WarrantsCalculator() {
                 <input
                   type="text"
                   value={warrantId}
-                  onChange={(e) => setWarrantId(e.target.value)}
+                  onChange={handleWarrantIdChange}
                   placeholder="請輸入代號"
                   disabled={!dbExists}
                   className="flex-[2] rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none disabled:bg-[#eef2f5] disabled:text-[#a9bccb]"
