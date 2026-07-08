@@ -50,37 +50,43 @@
 }
 
 /* ---------- 自訂品牌 token（Medium 風格）---------- */
+/* ---------- 亮色模式（溫暖日系 + 藍染點綴）---------- */
 :root {
-  --bg: #ffffff;
-  --ink: #242424;
-  --ink-soft: #5b5b5b;
-  --ink-faint: #8a8a8a;
-  --rule: #e8e6e1;
-  --rule-strong: #d8d5cf;
-  --accent-ink: #4298b3;
-  --accent-soft: #f0f7ef;
-  --paper: #fbfaf8;
-  --code-bg: #f4f2ee;
-  --serif: "Source Serif 4", Georgia, serif;
-  --sans:
-    "Noto Sans TC", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --mono: "JetBrains Mono", monospace;
+  --bg: #fefcf8;
+  --ink: #2b2621;
+  --ink-soft: #6b6259;
+  --ink-faint: #9c9187;
+  --rule: #e8e1d5;
+  --rule-strong: #d9cfbe;
+  --accent-ink: #2a5c8a;
+  --accent-soft: #eef3f6;
+  --accent-brand: #5b93c4;
+  --accent-brand-hover: #4a7cab;
+  --accent-brand-soft: #eaf3fa;
+  --paper: #f7f3ea;
+  --code-bg: #f0ebe0;
+  --serif: "Source Serif TC", Georgia, serif;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --mono: "JetBrains Mono", "Consolas", monospace;
   --maxw: 700px;
 }
 
-/* ---------- 深色模式 ---------- */
+/* ---------- 深色模式（溫暖日系 + 藍染點綴）---------- */
 [data-theme="dark"] {
-  --bg: #16161a;
-  --ink: #e8e6e1;
-  --ink-soft: #a8a6a1;
-  --ink-faint: #6b6b6b;
-  --rule: #2a2a2e;
-  --rule-strong: #38383c;
-  --accent: #2ea043;
-  --accent-ink: #4ade80;
-  --code-bg: #26262a;
-  --code-block-bg: #0d0d0f;
-  --code-block-text: #e8e6e1;
+  --bg: #1a1714;
+  --ink: #ece6da;
+  --ink-soft: #b0a89b;
+  --ink-faint: #766f64;
+  --rule: #2e2924;
+  --rule-strong: #3c362f;
+  --accent: #4a7ba6;
+  --accent-ink: #6fa3cc;
+  --accent-brand: #6fa3cc;
+  --accent-brand-hover: #8db8db;
+  --accent-brand-soft: #242b33;
+  --code-bg: #241f1a;
+  --code-block-bg: #120f0c;
+  --code-block-text: #ece6da;
 }
 
 .dark {
@@ -151,6 +157,9 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-brand: var(--accent-brand);
+  --color-brand-hover: var(--accent-brand-hover);
+  --color-brand-soft: var(--accent-brand-soft);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

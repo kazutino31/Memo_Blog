@@ -349,34 +349,34 @@ export default function WarrantsCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e9f2f9] via-[#f6fafd] to-[#f6fafd] px-5 py-12">
-      <div className="mx-auto w-full max-w-[480px] rounded-[18px] border border-[#e8f0f6] bg-white p-8 pt-9 pb-7 shadow-[0_20px_40px_-20px_rgba(91,147,196,0.25),0_4px_10px_-4px_rgba(91,147,196,0.12)]">
+    <div className="min-h-screen bg-background px-5 py-12">
+      <div className="mx-auto w-full max-w-120 rounded-[18px] border border-rule bg-card p-8 pt-9 pb-7 shadow-xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#eaf3fa] to-[#dcebf6] text-[22px]">
-            <Calculator size={22} className="text-[#5b93c4]" />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-brand-soft text-[22px]">
+            <Calculator size={22} className="text-brand" />
           </div>
-          <h2 className="mb-1 text-xl font-bold tracking-tight text-[#2c4258]">
+          <h2 className="mb-1 text-xl font-bold tracking-tight text-ink">
             到期結算金額試算機
           </h2>
-          <p className="text-[12.5px] tracking-tight text-[#a9bccb]">
+          <p className="text-[12.5px] tracking-tight text-ink-faint">
             權證到期損益快速試算
           </p>
         </div>
 
         {isInitializing && (
-          <div className="mb-5 flex items-center justify-center gap-2 rounded-[10px] border border-[#dce8f1] bg-[#eef6fb] px-4 py-3 text-[13px] font-medium text-[#3b6e95]">
+          <div className="mb-5 flex items-center justify-center gap-2 rounded-[10px] border border-rule bg-brand-soft px-4 py-3 text-[13px] font-medium text-brand">
             <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
             連線中，正在載入資料狀態...
           </div>
         )}
 
-        <div className="mb-5 rounded-[10px] border border-[#e8f0f6] bg-[#f2f7fb] p-5">
-          <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-[#4a7cab] uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-[#5b93c4] before:content-['']">
+        <div className="mb-5 rounded-[10px] border border-rule bg-muted/50 p-5">
+          <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-brand uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-brand before:content-['']">
             代號查詢
           </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-semibold text-[#7691a8]">
+              <label className="text-[13px] font-semibold text-ink-soft">
                 權證代號
               </label>
               <div className="flex gap-2">
@@ -386,12 +386,12 @@ export default function WarrantsCalculator() {
                   onChange={handleWarrantIdChange}
                   placeholder="請輸入代號"
                   disabled={!dbExists}
-                  className="flex-[2] rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none disabled:bg-[#eef2f5] disabled:text-[#a9bccb]"
+                  className="flex-2 rounded-[7px] border border-rule bg-background px-3 py-2.5 text-[15px] transition focus:border-brand focus:ring-[3px] focus:ring-brand/15 focus:outline-none disabled:bg-muted disabled:text-ink-faint"
                 />
                 <button
                   onClick={getData}
                   disabled={!dbExists || isSearching}
-                  className="flex-1 rounded-[7px] bg-[#6c8499] px-2 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#587389] active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                  className="flex-1 rounded-[7px] bg-secondary px-2 py-2.5 text-[13.5px] font-semibold text-secondary-foreground transition hover:opacity-80 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-ink-faint"
                 >
                   {isSearching ? "搜尋中..." : "查詢代號"}
                 </button>
@@ -400,10 +400,10 @@ export default function WarrantsCalculator() {
 
             {warrantName && (
               <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-[#7691a8]">
+                <label className="text-[13px] font-semibold text-ink-soft">
                   權證名稱
                 </label>
-                <div className="rounded-[7px] border border-[#dce8f1] bg-white/50 px-3 py-2.5 text-[15px] font-medium text-[#33475b]">
+                <div className="rounded-[7px] border border-rule bg-background/50 px-3 py-2.5 text-[15px] font-medium text-ink">
                   {warrantName}
                 </div>
               </div>
@@ -411,11 +411,11 @@ export default function WarrantsCalculator() {
 
             {underlyingPrice !== null && (
               <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-[#7691a8]">
+                <label className="text-[13px] font-semibold text-ink-soft">
                   標的最新價格 (參考)
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 rounded-[7px] border border-emerald-100 bg-emerald-50/30 px-3 py-2.5 text-[15px] font-bold text-emerald-600">
+                  <div className="flex-1 rounded-[7px] border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-[15px] font-bold text-emerald-600 dark:text-emerald-400">
                     {underlyingPrice}
                   </div>
                   <button
@@ -432,7 +432,7 @@ export default function WarrantsCalculator() {
                   ((type === "call" && underlyingPrice < Number(strikePrice)) ||
                     (type === "put" &&
                       underlyingPrice > Number(strikePrice))) && (
-                    <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
+                    <div className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[12px] font-medium text-amber-600 dark:text-amber-400">
                       <TriangleAlert className="inline-block h-4 w-4" />
                       目前為價外，若維持此股價，到期結算價值將歸零。
                     </div>
@@ -442,20 +442,20 @@ export default function WarrantsCalculator() {
           </div>
         </div>
 
-        <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-[#4a7cab] uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-[#5b93c4] before:content-['']">
+        <div className="mb-3 flex items-center gap-1.5 text-[11.5px] font-bold tracking-widest text-brand uppercase before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-brand before:content-['']">
           試算參數
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               權證類型
             </label>
             <select
               value={type}
               disabled={!dbExists}
               onChange={(e) => setType(e.target.value as "call" | "put")}
-              className="w-full rounded-[7px] border border-[#dce8f1] bg-white px-3 py-2.5 text-[15px] transition focus:border-[#5b93c4] focus:ring-[3px] focus:ring-[#5b93c4]/15 focus:outline-none disabled:bg-[#eef2f5] disabled:text-[#a9bccb]"
+              className="w-full rounded-[7px] border border-rule bg-background px-3 py-2.5 text-[15px] transition focus:border-brand focus:ring-[3px] focus:ring-brand/15 focus:outline-none disabled:bg-muted disabled:text-ink-faint"
             >
               <option value="call">認購 (Call)</option>
               <option value="put">認售 (Put)</option>
@@ -464,7 +464,7 @@ export default function WarrantsCalculator() {
 
           {/* 最新履約價格 */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               最新履約價格 (元) <span className="text-red-500">*</span>
             </label>
             <input
@@ -480,10 +480,10 @@ export default function WarrantsCalculator() {
                 }
               }}
               className={cn(
-                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
                 errors.strikePrice
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+                  : "border-rule focus:border-brand focus:ring-brand/15",
               )}
             />
             {errors.strikePrice && (
@@ -495,7 +495,7 @@ export default function WarrantsCalculator() {
 
           {/* 行使比例 */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               行使比例 <span className="text-red-500">*</span>
             </label>
             <input
@@ -509,10 +509,10 @@ export default function WarrantsCalculator() {
                 }
               }}
               className={cn(
-                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
                 errors.ratio
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+                  : "border-rule focus:border-brand focus:ring-brand/15",
               )}
             />
             {errors.ratio && (
@@ -524,7 +524,7 @@ export default function WarrantsCalculator() {
 
           {/* 持有張數 */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               持有張數 <span className="text-red-500">*</span>
             </label>
             <input
@@ -537,10 +537,10 @@ export default function WarrantsCalculator() {
                 }
               }}
               className={cn(
-                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
                 errors.amount
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+                  : "border-rule focus:border-brand focus:ring-brand/15",
               )}
             />
             {errors.amount && (
@@ -552,7 +552,7 @@ export default function WarrantsCalculator() {
 
           {/* 每單位買進成本 */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               每單位買進成本 (元) <span className="text-red-500">*</span>
             </label>
             <input
@@ -566,10 +566,10 @@ export default function WarrantsCalculator() {
                 }
               }}
               className={cn(
-                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
                 errors.cost
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+                  : "border-rule focus:border-brand focus:ring-brand/15",
               )}
             />
             {errors.cost && (
@@ -581,7 +581,7 @@ export default function WarrantsCalculator() {
 
           {/* 預估到期日標的股價 */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-semibold text-[#7691a8]">
+            <label className="text-[13px] font-semibold text-ink-soft">
               預估到期日標的股價 (元) <span className="text-red-500">*</span>
             </label>
             <input
@@ -600,10 +600,10 @@ export default function WarrantsCalculator() {
                 underlyingPrice ? `未填則帶入參考價 ${underlyingPrice}` : ""
               }
               className={cn(
-                "w-full rounded-[7px] border bg-white px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
                 errors.targetPrice
                   ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-                  : "border-[#dce8f1] focus:border-[#5b93c4] focus:ring-[#5b93c4]/15",
+                  : "border-rule focus:border-brand focus:ring-brand/15",
               )}
             />
             {errors.targetPrice && (
@@ -617,7 +617,7 @@ export default function WarrantsCalculator() {
               ((type === "call" && Number(targetPrice) < Number(strikePrice)) ||
                 (type === "put" &&
                   Number(targetPrice) > Number(strikePrice))) && (
-                <div className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-600">
+                <div className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[12px] font-medium text-amber-600 dark:text-amber-400">
                   <TriangleAlert className="inline-block h-4 w-4" />
                   預估值為價外，若以此股價結算，價值將歸零。
                 </div>
@@ -626,75 +626,73 @@ export default function WarrantsCalculator() {
 
           <button
             onClick={calculate}
-            className="w-full rounded-[7px] bg-[#5b93c4] p-3 text-[15.5px] font-semibold text-white shadow-[0_8px_16px_-8px_rgba(91,147,196,0.6)] transition hover:bg-[#4a7cab] active:translate-y-px"
+            className="w-full rounded-[7px] bg-brand p-3 text-[15.5px] font-semibold text-white shadow-lg transition hover:bg-brand-hover active:translate-y-px"
           >
             開始計算結算金額
           </button>
 
           {result && (
-            <div className="mt-6 rounded-[10px] border border-[#d9e9f5] bg-gradient-to-br from-[#eaf3fa] to-[#f5faff] p-5">
-              <div className="mb-3.5 border-b border-[#d9e9f5] pb-2.5 text-[14px] font-bold tracking-widest text-[#4a7cab] uppercase">
+            <div className="mt-6 rounded-[10px] border border-rule bg-brand-soft/30 p-5">
+              <div className="mb-3.5 border-b border-rule pb-2.5 text-[14px] font-bold tracking-widest text-brand uppercase">
                 試算結果
               </div>
               <div className="space-y-3 pt-1">
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                <div className="flex justify-between text-[14px] text-ink-soft">
                   <span>每單位權證到期價值：</span>
-                  <span className="font-bold text-[#33475b]">
+                  <span className="font-bold text-ink">
                     {result.unitValue.toFixed(4)} 元
                   </span>
                 </div>
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                <div className="flex justify-between text-[14px] text-ink-soft">
                   <span>可拿回總金額：</span>
-                  <span className="font-bold text-[#33475b]">
+                  <span className="font-bold text-ink">
                     {Math.round(result.totalReturn).toLocaleString()} 元
                   </span>
                 </div>
-                <div className="flex justify-between text-[14px] text-[#7691a8]">
+                <div className="flex justify-between text-[14px] text-ink-soft">
                   <span>損益平衡標的價：</span>
-                  <span className="font-bold text-amber-600">
+                  <span className="font-bold text-amber-600 dark:text-amber-400">
                     {result.breakeven.toFixed(2)} 元
                   </span>
                 </div>
-                <div className="mt-3 flex justify-between border-t border-dashed border-[#c9dded] pt-3 text-[14px] text-[#7691a8]">
+                <div className="mt-3 flex justify-between border-t border-dashed border-rule pt-3 text-[14px] text-ink-soft">
                   <span>淨損益 (報酬率)：</span>
                   {Math.round(result.netProfit) > 0 ? (
                     <div className="text-right">
-                      <div className="text-[13px] font-bold text-[#4caf82]">
+                      <div className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400">
                         獲利 +{Math.round(result.netProfit).toLocaleString()} 元
                       </div>
-                      <div className="text-[11px] font-medium text-[#4caf82]/80">
+                      <div className="text-[11px] font-medium text-emerald-600/80">
                         (+{result.roi.toFixed(2)}%)
                       </div>
                     </div>
                   ) : Math.round(result.netProfit) < 0 ? (
                     <div className="text-right">
-                      <div className="text-[13px] font-bold text-[#e0716b]">
+                      <div className="text-[13px] font-bold text-destructive">
                         虧損 -
                         {Math.round(
                           Math.abs(result.netProfit),
                         ).toLocaleString()}{" "}
                         元
                       </div>
-                      <div className="text-[11px] font-medium text-[#e0716b]/80">
+                      <div className="text-[11px] font-medium text-destructive/80">
                         ({result.roi.toFixed(2)}%)
                       </div>
                     </div>
                   ) : (
-                    <span className="font-bold text-[#33475b]">
-                      0 元 (損益兩平)
-                    </span>
+                    <span className="font-bold text-ink">0 元 (損益兩平)</span>
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="mt-6 border-t border-[#e8f0f6] pt-4">
+          <div className="mt-6 border-t border-rule pt-4">
             <button
               onClick={() => setIsManagementOpen(!isManagementOpen)}
-              className="flex w-full items-center justify-between text-[13px] font-bold text-[#7691a8] transition hover:text-[#5b93c4]"
+              className="flex w-full items-center justify-between text-[13px] font-bold text-ink-soft transition hover:text-brand"
             >
-              <span className="flex items-center gap-1.5 uppercase tracking-widest before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-[#5b93c4] before:content-['']">
+              <span className="flex items-center gap-1.5 uppercase tracking-widest before:inline-block before:h-1 before:w-1 before:rounded-full before:bg-brand before:content-['']">
                 數據維護與同步
               </span>
               <span
@@ -711,7 +709,7 @@ export default function WarrantsCalculator() {
               className={cn(
                 "overflow-hidden transition-all duration-300",
                 isManagementOpen
-                  ? "mt-4 max-h-[500px] opacity-100"
+                  ? "mt-4 max-h-125 opacity-100"
                   : "max-h-0 opacity-0",
               )}
             >
@@ -720,14 +718,14 @@ export default function WarrantsCalculator() {
                   <button
                     onClick={getLiveTWSE}
                     disabled={!dbExists || isLiveFetching}
-                    className="flex-1 rounded-[7px] bg-[#79a6cf] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#6893bd] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                    className="flex-1 rounded-[7px] bg-brand/80 p-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px disabled:bg-muted disabled:text-ink-faint"
                   >
                     {isLiveFetching ? "抓取中..." : "即時查詢證交所"}
                   </button>
                   <button
                     onClick={syncData}
                     disabled={!dbExists || isSyncing}
-                    className="flex-1 rounded-[7px] bg-[#98b3c9] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#86a2b9] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                    className="flex-1 rounded-[7px] bg-brand/20 p-2.5 text-[13px] font-semibold text-ink-soft transition hover:bg-brand/40 active:translate-y-px disabled:bg-muted disabled:text-ink-faint"
                   >
                     {isSyncing ? "同步中..." : "同步權證庫"}
                   </button>
@@ -736,15 +734,15 @@ export default function WarrantsCalculator() {
                 <button
                   onClick={syncStocks}
                   disabled={!dbExists || isStockSyncing}
-                  className="w-full rounded-[7px] bg-[#a8c5da] p-2.5 text-[13px] font-semibold text-white transition hover:bg-[#92afc5] active:translate-y-px disabled:bg-[#dbe4ea] disabled:text-[#a9bccb]"
+                  className="w-full rounded-[7px] bg-brand-soft p-2.5 text-[13px] font-semibold text-brand transition hover:opacity-80 active:translate-y-px disabled:bg-muted disabled:text-ink-faint"
                 >
                   {isStockSyncing ? "同步中..." : "更新標的收盤價"}
                 </button>
 
                 <div
                   className={cn(
-                    "flex flex-col gap-1 text-center text-[11px] leading-relaxed text-[#a9bccb]",
-                    !dbExists && "text-[#e0716b]",
+                    "flex flex-col gap-1 text-center text-[11px] leading-relaxed text-ink-faint",
+                    !dbExists && "text-destructive",
                   )}
                 >
                   <div>{dbStatus}</div>
