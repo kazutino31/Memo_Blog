@@ -77,6 +77,14 @@ export default function BaseLayout() {
               </Link>
             )}
             {location.pathname === "/" && (
+              <Link
+                to="/topics"
+                className="hidden sm:inline-block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors"
+              >
+                主題關聯圖
+              </Link>
+            )}
+            {location.pathname === "/" && (
             <ThemeToggle />
             )}
             {/* 漢堡選單（手機端） */}
@@ -117,6 +125,13 @@ export default function BaseLayout() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 權證試算
+              </Link>
+              <Link
+                to="/topics"
+                className="block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                主題關聯圖
               </Link>
             </div>
           </div>

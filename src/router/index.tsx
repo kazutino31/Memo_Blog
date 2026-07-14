@@ -6,6 +6,7 @@ import CategoryPage from "@/pages/CategoryPage";
 import TagPage from "@/pages/TagPage";
 import SeriesPage from "@/pages/SeriesPage";
 import WarrantsCalculator from "@/pages/WarrantsCalculator";
+import TopicMapPage from "@/pages/TopicMapPage";
 
 export const router = createBrowserRouter(
   [
@@ -18,6 +19,7 @@ export const router = createBrowserRouter(
         { path: "/tags/:tag", element: <TagPage /> },
         { path: "/series/:series", element: <SeriesPage /> },
         { path: "/calculator", element: <WarrantsCalculator /> },
+        { path: "/topics", element: <TopicMapPage /> },
       ],
     },
   ],
