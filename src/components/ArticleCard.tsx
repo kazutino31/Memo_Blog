@@ -32,6 +32,10 @@ export function ArticleCard({
         </p>
         <div className="flex flex-wrap items-center gap-3.5 text-[13px] text-[var(--ink-faint)]">
           <span>{note.publishDate}</span>
+          <span className="inline-flex items-center gap-3.5">
+            <span className="h-[3px] w-[3px] rounded-full bg-[var(--ink-faint)]" />
+            約 {note.readingTime} 分鐘閱讀
+          </span>
           {note.tags.slice(0, 3).map((tag) => (
             <span className="inline-flex items-center gap-3.5" key={tag}>
               <span className="h-[3px] w-[3px] rounded-full bg-[var(--ink-faint)]" />{" "}

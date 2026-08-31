@@ -36,9 +36,92 @@ interface FormErrors {
   amount?: boolean;
   cost?: boolean;
   targetPrice?: boolean;
+  spotPrice?: boolean;
+  volatility?: boolean;
+  riskFreeRate?: boolean;
+  remainingDays?: boolean;
 }
 
+type CalculationMode = "expiry" | "valuation";
+
+interface ValuationResult {
+  theoreticalValue: number;
+  intrinsicValue: number;
+  timeValue: number;
+  delta: number;
+  remainingDays: number;
+  scenarios: Array<{
+    change: number;
+    spotPrice: number;
+    theoreticalValue: number;
+    changeRate: number;
+  }>;
+}
+
+const normalCdf = (value: number) => {
+  const sign = value < 0 ? -1 : 1;
+  const x = Math.abs(value) / Math.sqrt(2);
+  const t = 1 / (1 + 0.3275911 * x);
+  const erf =
+    1 -
+    (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t -
+      0.284496736) *
+      t +
+      0.254829592) *
+      t) *
+      Math.exp(-x * x);
+
+  return 0.5 * (1 + sign * erf);
+};
+
+const blackScholes = (
+  optionType: "call" | "put",
+  spot: number,
+  strike: number,
+  years: number,
+  volatility: number,
+  riskFreeRate: number,
+) => {
+  if (years <= 0 || volatility <= 0) {
+    return {
+      price:
+        optionType === "call"
+          ? Math.max(spot - strike, 0)
+          : Math.max(strike - spot, 0),
+      delta:
+        optionType === "call"
+          ? spot > strike
+            ? 1
+            : 0
+          : spot < strike
+            ? -1
+            : 0,
+    };
+  }
+
+  const sqrtYears = Math.sqrt(years);
+  const d1 =
+    (Math.log(spot / strike) +
+      (riskFreeRate + (volatility * volatility) / 2) * years) /
+    (volatility * sqrtYears);
+  const d2 = d1 - volatility * sqrtYears;
+  const discountedStrike = strike * Math.exp(-riskFreeRate * years);
+
+  if (optionType === "call") {
+    return {
+      price: spot * normalCdf(d1) - discountedStrike * normalCdf(d2),
+      delta: normalCdf(d1),
+    };
+  }
+
+  return {
+    price: discountedStrike * normalCdf(-d2) - spot * normalCdf(-d1),
+    delta: normalCdf(d1) - 1,
+  };
+};
+
 export default function WarrantsCalculator() {
+  const [mode, setMode] = useState<CalculationMode>("expiry");
   const [warrantId, setWarrantId] = useState("");
   const [warrantName, setWarrantName] = useState("");
   const [underlyingPrice, setUnderlyingPrice] = useState<number | null>(null);
@@ -48,6 +131,10 @@ export default function WarrantsCalculator() {
   const [amount, setAmount] = useState<number | "">("");
   const [cost, setCost] = useState<number | "">("");
   const [targetPrice, setTargetPrice] = useState<number | "">("");
+  const [spotPrice, setSpotPrice] = useState<number | "">("");
+  const [volatility, setVolatility] = useState<number | "">(30);
+  const [riskFreeRate, setRiskFreeRate] = useState<number | "">(1.5);
+  const [remainingDays, setRemainingDays] = useState<number | "">(90);
   const [dbStatus, setDbStatus] = useState<string>("正在確認資料庫狀態...");
   const [stockDbStatus, setStockDbStatus] =
     useState<string>("正在確認股價資料...");
@@ -70,6 +157,8 @@ export default function WarrantsCalculator() {
     roi: number;
     breakeven: number;
   } | null>(null);
+  const [valuationResult, setValuationResult] =
+    useState<ValuationResult | null>(null);
 
   useEffect(() => {
     const initializeStatus = async () => {
@@ -144,9 +233,15 @@ export default function WarrantsCalculator() {
       );
       if (stock && stock["ClosingPrice"] && stock["ClosingPrice"] !== "--") {
         const cleanPrice = String(stock["ClosingPrice"]).replace(/,/g, "");
-        setUnderlyingPrice(Number(cleanPrice));
+        const price = Number(cleanPrice);
+        setUnderlyingPrice(price);
+        setSpotPrice(price);
         // 自動帶入時清除 targetPrice 的錯誤提示
-        setErrors((prev) => ({ ...prev, targetPrice: false }));
+        setErrors((prev) => ({
+          ...prev,
+          targetPrice: false,
+          spotPrice: false,
+        }));
       }
     } catch (err) {
       console.error("抓取股價失敗", err);
@@ -332,6 +427,72 @@ export default function WarrantsCalculator() {
     });
   };
 
+  const calculateValuation = () => {
+    const newErrors: FormErrors = {
+      strikePrice: strikePrice === "" || Number(strikePrice) <= 0,
+      ratio: ratio === "" || Number(ratio) <= 0,
+      spotPrice: spotPrice === "" || Number(spotPrice) <= 0,
+      volatility: volatility === "" || Number(volatility) <= 0,
+      riskFreeRate: riskFreeRate === "",
+      remainingDays: remainingDays === "" || Number(remainingDays) < 0,
+    };
+
+    setErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) return;
+
+    const spot = Number(spotPrice);
+    const strike = Number(strikePrice);
+    const exerciseRatio = Number(ratio);
+    const years = Number(remainingDays) / 365;
+    const annualVolatility = Number(volatility) / 100;
+    const annualRiskFreeRate = Number(riskFreeRate) / 100;
+    const baseOption = blackScholes(
+      type,
+      spot,
+      strike,
+      years,
+      annualVolatility,
+      annualRiskFreeRate,
+    );
+    const theoreticalValue = baseOption.price * exerciseRatio;
+    const intrinsicValue =
+      (type === "call"
+        ? Math.max(spot - strike, 0)
+        : Math.max(strike - spot, 0)) * exerciseRatio;
+
+    const scenarios = [-10, -5, 0, 5, 10].map((change) => {
+      const scenarioSpot = spot * (1 + change / 100);
+      const scenarioValue =
+        blackScholes(
+          type,
+          scenarioSpot,
+          strike,
+          years,
+          annualVolatility,
+          annualRiskFreeRate,
+        ).price * exerciseRatio;
+
+      return {
+        change,
+        spotPrice: scenarioSpot,
+        theoreticalValue: scenarioValue,
+        changeRate:
+          theoreticalValue > 0
+            ? ((scenarioValue - theoreticalValue) / theoreticalValue) * 100
+            : 0,
+      };
+    });
+
+    setValuationResult({
+      theoreticalValue,
+      intrinsicValue,
+      timeValue: Math.max(theoreticalValue - intrinsicValue, 0),
+      delta: baseOption.delta * exerciseRatio,
+      remainingDays: Number(remainingDays),
+      scenarios,
+    });
+  };
+
   // 代號改變重置表單
   const handleWarrantIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -344,23 +505,65 @@ export default function WarrantsCalculator() {
       setStrikePrice("");
       setRatio("");
       setResult(null);
+      setValuationResult(null);
+      setSpotPrice("");
       setErrors({});
     }
   };
 
   return (
     <div className="min-h-screen bg-background px-5 py-12">
-      <div className="mx-auto w-full max-w-120 rounded-[18px] border border-rule bg-card p-8 pt-9 pb-7 shadow-xl">
+      <div
+        className={cn(
+          "mx-auto w-full rounded-[18px] border border-rule bg-card p-8 pt-9 pb-7 shadow-xl transition-[max-width]",
+          mode === "expiry" ? "max-w-120" : "max-w-2xl",
+        )}
+      >
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-brand-soft text-[22px]">
             <Calculator size={22} className="text-brand" />
           </div>
           <h2 className="mb-1 text-xl font-bold tracking-tight text-ink">
-            到期結算金額試算機
+            權證試算機
           </h2>
           <p className="text-[12.5px] tracking-tight text-ink-faint">
-            權證到期損益快速試算
+            {mode === "expiry"
+              ? "權證到期損益快速試算"
+              : "Black–Scholes 理論估價與標的情境分析"}
           </p>
+        </div>
+
+        <div className="mb-5 grid grid-cols-2 gap-1 rounded-[10px] bg-muted/50 p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("expiry");
+              setErrors({});
+            }}
+            className={cn(
+              "rounded-[7px] px-3 py-2.5 text-[13px] font-semibold transition",
+              mode === "expiry"
+                ? "bg-background text-brand shadow-sm"
+                : "text-ink-faint hover:text-ink-soft",
+            )}
+          >
+            到期損益
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("valuation");
+              setErrors({});
+            }}
+            className={cn(
+              "rounded-[7px] px-3 py-2.5 text-[13px] font-semibold transition",
+              mode === "valuation"
+                ? "bg-background text-brand shadow-sm"
+                : "text-ink-faint hover:text-ink-soft",
+            )}
+          >
+            Black–Scholes 估價
+          </button>
         </div>
 
         {isInitializing && (
@@ -420,15 +623,27 @@ export default function WarrantsCalculator() {
                   </div>
                   <button
                     onClick={() => {
-                      setTargetPrice(underlyingPrice);
-                      setErrors((prev) => ({ ...prev, targetPrice: false }));
+                      if (mode === "expiry") {
+                        setTargetPrice(underlyingPrice);
+                        setErrors((prev) => ({
+                          ...prev,
+                          targetPrice: false,
+                        }));
+                      } else {
+                        setSpotPrice(underlyingPrice);
+                        setErrors((prev) => ({
+                          ...prev,
+                          spotPrice: false,
+                        }));
+                      }
                     }}
                     className="rounded-[7px] bg-emerald-600 px-3 py-2.5 text-[12px] font-bold text-white transition hover:bg-emerald-700"
                   >
-                    帶入試算
+                    {mode === "expiry" ? "帶入試算" : "帶入現價"}
                   </button>
                 </div>
-                {strikePrice !== "" &&
+                {mode === "expiry" &&
+                  strikePrice !== "" &&
                   ((type === "call" && underlyingPrice < Number(strikePrice)) ||
                     (type === "put" &&
                       underlyingPrice > Number(strikePrice))) && (
@@ -522,6 +737,8 @@ export default function WarrantsCalculator() {
             )}
           </div>
 
+          {mode === "expiry" && (
+            <>
           {/* 持有張數 */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-ink-soft">
@@ -624,14 +841,151 @@ export default function WarrantsCalculator() {
               )}
           </div>
 
+            </>
+          )}
+
+          {mode === "valuation" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-[13px] font-semibold text-ink-soft">
+                  標的目前價格 (元) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={spotPrice}
+                  onChange={(e) => {
+                    setSpotPrice(
+                      e.target.value === "" ? "" : Number(e.target.value),
+                    );
+                    if (e.target.value !== "") {
+                      setErrors((prev) => ({ ...prev, spotPrice: false }));
+                    }
+                  }}
+                  placeholder={
+                    underlyingPrice ? `參考價 ${underlyingPrice}` : "例如 100"
+                  }
+                  className={cn(
+                    "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                    errors.spotPrice
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                      : "border-rule focus:border-brand focus:ring-brand/15",
+                  )}
+                />
+                {errors.spotPrice && (
+                  <p className="text-[11.5px] font-medium text-red-500">
+                    請輸入大於 0 的標的目前價格
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-semibold text-ink-soft">
+                  年化波動率 (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={volatility}
+                  onChange={(e) => {
+                    setVolatility(
+                      e.target.value === "" ? "" : Number(e.target.value),
+                    );
+                    if (e.target.value !== "") {
+                      setErrors((prev) => ({ ...prev, volatility: false }));
+                    }
+                  }}
+                  className={cn(
+                    "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                    errors.volatility
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                      : "border-rule focus:border-brand focus:ring-brand/15",
+                  )}
+                />
+                {errors.volatility && (
+                  <p className="text-[11.5px] font-medium text-red-500">
+                    請輸入大於 0 的年化波動率
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-semibold text-ink-soft">
+                  無風險利率 (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={riskFreeRate}
+                  onChange={(e) => {
+                    setRiskFreeRate(
+                      e.target.value === "" ? "" : Number(e.target.value),
+                    );
+                    if (e.target.value !== "") {
+                      setErrors((prev) => ({ ...prev, riskFreeRate: false }));
+                    }
+                  }}
+                  className={cn(
+                    "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                    errors.riskFreeRate
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                      : "border-rule focus:border-brand focus:ring-brand/15",
+                  )}
+                />
+                {errors.riskFreeRate && (
+                  <p className="text-[11.5px] font-medium text-red-500">
+                    請輸入無風險利率，可填 0
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-[13px] font-semibold text-ink-soft">
+                  剩餘天數 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={remainingDays}
+                  onChange={(e) => {
+                    setRemainingDays(
+                      e.target.value === "" ? "" : Number(e.target.value),
+                    );
+                    if (e.target.value !== "") {
+                      setErrors((prev) => ({ ...prev, remainingDays: false }));
+                    }
+                  }}
+                  className={cn(
+                    "w-full rounded-[7px] border bg-background px-3 py-2.5 text-[15px] transition focus:ring-[3px] focus:outline-none",
+                    errors.remainingDays
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                      : "border-rule focus:border-brand focus:ring-brand/15",
+                  )}
+                />
+                {errors.remainingDays && (
+                  <p className="text-[11.5px] font-medium text-red-500">
+                    請輸入 0 或正整數天數
+                  </p>
+                )}
+              </div>
+
+              <p className="text-[11.5px] leading-relaxed text-ink-faint sm:col-span-2">
+                本模式以無股息 Black–Scholes 模型估算；波動率與利率在所有情境中維持不變。
+              </p>
+            </div>
+          )}
+
           <button
-            onClick={calculate}
+            onClick={mode === "expiry" ? calculate : calculateValuation}
             className="w-full rounded-[7px] bg-brand p-3 text-[15.5px] font-semibold text-white shadow-lg transition hover:bg-brand-hover active:translate-y-px"
           >
-            開始計算結算金額
+            {mode === "expiry" ? "開始計算結算金額" : "計算理論價值與情境"}
           </button>
 
-          {result && (
+          {mode === "expiry" && result && (
             <div className="mt-6 rounded-[10px] border border-rule bg-brand-soft/30 p-5">
               <div className="mb-3.5 border-b border-rule pb-2.5 text-[14px] font-bold tracking-widest text-brand uppercase">
                 試算結果
@@ -683,6 +1037,125 @@ export default function WarrantsCalculator() {
                     <span className="font-bold text-ink">0 元 (損益兩平)</span>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {mode === "valuation" && valuationResult && (
+            <div className="mt-6 overflow-hidden rounded-[10px] border border-rule bg-brand-soft/30">
+              <div className="border-b border-rule px-5 py-4">
+                <div className="text-[14px] font-bold tracking-widest text-brand uppercase">
+                  Black–Scholes 估價結果
+                </div>
+                <p className="mt-1 text-[11.5px] text-ink-faint">
+                  金額均為每單位權證估值，已乘上行使比例。
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 border-b border-rule sm:grid-cols-4">
+                {[
+                  {
+                    label: "理論價值",
+                    value: `${valuationResult.theoreticalValue.toFixed(4)} 元`,
+                  },
+                  {
+                    label: "內含價值",
+                    value: `${valuationResult.intrinsicValue.toFixed(4)} 元`,
+                  },
+                  {
+                    label: "時間價值",
+                    value: `${valuationResult.timeValue.toFixed(4)} 元`,
+                  },
+                  {
+                    label: "Delta",
+                    value: valuationResult.delta.toFixed(4),
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={item.label}
+                    className={cn(
+                      "px-4 py-4",
+                      index % 2 === 0 && "border-r border-rule",
+                      index < 2 && "border-b border-rule sm:border-b-0",
+                      index === 1 && "sm:border-r",
+                      index === 2 && "sm:border-r",
+                    )}
+                  >
+                    <div className="text-[11px] font-semibold tracking-wide text-ink-faint">
+                      {item.label}
+                    </div>
+                    <div className="mt-1 text-[15px] font-bold tabular-nums text-ink">
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between border-b border-rule px-5 py-3 text-[12px] text-ink-soft">
+                <span>剩餘天數</span>
+                <span className="font-bold tabular-nums text-ink">
+                  {valuationResult.remainingDays} 天
+                </span>
+              </div>
+
+              <div className="px-5 py-4">
+                <div className="mb-3 text-[13px] font-bold text-ink">
+                  標的價格情境
+                </div>
+                <div className="overflow-x-auto rounded-[7px] border border-rule bg-background">
+                  <table className="w-full min-w-115 border-collapse text-left text-[12px]">
+                    <thead className="bg-muted/40 text-ink-faint">
+                      <tr>
+                        <th className="px-3 py-2.5 font-semibold">標的變動</th>
+                        <th className="px-3 py-2.5 text-right font-semibold">
+                          標的價格
+                        </th>
+                        <th className="px-3 py-2.5 text-right font-semibold">
+                          權證理論價
+                        </th>
+                        <th className="px-3 py-2.5 text-right font-semibold">
+                          相對目前估值
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {valuationResult.scenarios.map((scenario) => (
+                        <tr
+                          key={scenario.change}
+                          className={cn(
+                            "border-t border-rule text-ink-soft",
+                            scenario.change === 0 && "bg-brand-soft/50 text-ink",
+                          )}
+                        >
+                          <td className="px-3 py-2.5 font-semibold tabular-nums">
+                            {scenario.change > 0 ? "+" : ""}
+                            {scenario.change}%
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {scenario.spotPrice.toFixed(2)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-ink">
+                            {scenario.theoreticalValue.toFixed(4)}
+                          </td>
+                          <td
+                            className={cn(
+                              "px-3 py-2.5 text-right font-semibold tabular-nums",
+                              scenario.changeRate > 0 &&
+                                "text-emerald-600 dark:text-emerald-400",
+                              scenario.changeRate < 0 && "text-destructive",
+                            )}
+                          >
+                            {scenario.changeRate > 0 ? "+" : ""}
+                            {scenario.changeRate.toFixed(2)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-[11px] leading-relaxed text-ink-faint">
+                  此結果為模型估算，不包含隱含波動率變化、股息、流動性、價差與發行商調整。
+                </p>
               </div>
             </div>
           )}

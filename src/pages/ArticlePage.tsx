@@ -29,6 +29,10 @@ export default function ArticlePage() {
         </h1>
         <div className="mb-10 flex flex-wrap items-center gap-3.5 border-b border-[var(--rule)] pb-8 text-sm text-[var(--ink-faint)]">
           <span>{note.publishDate}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-[3px] w-[3px] rounded-full bg-[var(--ink-faint)]" />
+            約 {note.readingTime} 分鐘閱讀
+          </span>
           {note.tags.map((tag) => (
             <Link
               className="inline-flex items-center gap-1.5 text-[var(--ink-faint)] hover:text-[var(--accent-ink)]"

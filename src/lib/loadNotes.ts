@@ -11,6 +11,7 @@ export interface NoteMeta {
   publishDate: string;
   draft?: boolean;
   content: string;
+  readingTime: number;
 }
 
 const modules = import.meta.glob("/src/content/notes/*.md", {
@@ -31,8 +32,22 @@ export function loadAllNotes(): NoteMeta[] {
         rawPublishDate instanceof Date
           ? rawPublishDate.toISOString().slice(0, 10)
           : meta.publishDate;
-      return { slug, content: content.trim(), ...meta, publishDate };
+      const trimmedContent = content.trim();
+      return {
+        slug,
+        content: trimmedContent,
+        ...meta,
+        publishDate,
+        readingTime: estimateReadingTime(trimmedContent),
+      };
     })
     .filter((note) => !note.draft)
     .sort((a, b) => b.publishDate.localeCompare(a.publishDate));
+}
+
+export function estimateReadingTime(content: string) {
+  const cjkCharacters = (content.match(/[\u3040-\u30ff\u3400-\u9fff]/g) ?? []).length;
+  const latinWords = (content.replace(/[\u3040-\u30ff\u3400-\u9fff]/g, " ").match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) ?? []).length;
+  const minutes = cjkCharacters / 450 + latinWords / 200;
+  return Math.max(1, Math.ceil(minutes));
 }
