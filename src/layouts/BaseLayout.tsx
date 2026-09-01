@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { AUTH_CHANGED_EVENT, getAccessToken } from "@/api/auth";
 
 export default function BaseLayout() {
   const location = useLocation();
@@ -9,6 +10,9 @@ export default function BaseLayout() {
   const isReading = location.pathname.startsWith("/notes/");
   const [progress, setProgress] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(getAccessToken()),
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -29,6 +33,16 @@ export default function BaseLayout() {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, [isReading]);
+
+  useEffect(() => {
+    const syncAuth = () => setIsAuthenticated(Boolean(getAccessToken()));
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuth);
+    window.addEventListener("storage", syncAuth);
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
 
   return (
     <div>
@@ -68,6 +82,11 @@ export default function BaseLayout() {
             </button>
           </div>
           <div className="flex items-center gap-4">
+            {isAuthenticated && (
+              <Link to="/admin/accounts/new" className="text-sm font-medium text-[var(--accent-ink)] no-underline transition-colors hover:text-[var(--ink)]">
+                建立帳號
+              </Link>
+            )}
             {location.pathname === "/" && (
               <Link
                 to="/admin/posts/new"

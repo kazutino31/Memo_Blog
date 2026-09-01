@@ -1,6 +1,7 @@
 import { api } from "@/api/client";
 
 const TOKEN_KEY = "memo_blog_access_token";
+export const AUTH_CHANGED_EVENT = "memo-blog-auth-changed";
 
 interface LoginPayload {
   email: string;
@@ -22,8 +23,8 @@ export async function login(payload: LoginPayload) {
   return response.data.token;
 }
 
-export async function register(payload: RegisterPayload) {
-  await api.post("/auth/register", payload);
+export async function register(payload: RegisterPayload, token?: string) {
+  await api.post("/auth/register", payload, { token });
 }
 
 export async function registerAndLogin(payload: RegisterPayload) {
@@ -44,8 +45,10 @@ export function getAccessToken() {
 
 export function saveAccessToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
 export function removeAccessToken() {
   localStorage.removeItem(TOKEN_KEY);
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }

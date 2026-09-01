@@ -5,7 +5,6 @@ import {
   changePassword,
   getAccessToken,
   login,
-  registerAndLogin,
   removeAccessToken,
   saveAccessToken,
 } from "@/api/auth";
@@ -37,8 +36,6 @@ export default function CreatePostPage() {
   const [token, setToken] = useState(() => getAccessToken());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
   const [form, setForm] = useState<CreatePostPayload>({
     title: "",
     slug: "",
@@ -56,10 +53,7 @@ export default function CreatePostPage() {
   const [passwordValidationError, setPasswordValidationError] = useState("");
 
   const authMutation = useMutation({
-    mutationFn: () =>
-      isRegistering
-        ? registerAndLogin({ name, email, password })
-        : login({ email, password }),
+    mutationFn: () => login({ email, password }),
     onSuccess: (accessToken) => {
       saveAccessToken(accessToken);
       setToken(accessToken);
@@ -130,24 +124,10 @@ export default function CreatePostPage() {
     return (
       <main className="mx-auto max-w-[520px] px-6 py-16">
         <h1 className="mb-3 text-4xl font-bold text-[var(--ink)] [font-family:var(--serif)]">
-          {isRegistering ? "建立帳號" : "登入"}
+          登入
         </h1>
-        <p className="mb-8 text-[var(--ink-soft)]">
-          {isRegistering ? "建立帳號後會自動登入。" : "新增文章前需先登入。"}
-        </p>
+        <p className="mb-8 text-[var(--ink-soft)]">新增文章前需先登入。</p>
         <form className="space-y-5" onSubmit={handleLogin}>
-          {isRegistering && (
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold">顯示名稱</span>
-              <input
-                className={inputClass}
-                required
-                maxLength={100}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-          )}
           <label className="block space-y-2">
             <span className="text-sm font-semibold">Email</span>
             <input
@@ -164,7 +144,6 @@ export default function CreatePostPage() {
               className={inputClass}
               type="password"
               required
-              minLength={isRegistering ? 8 : undefined}
               maxLength={72}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -180,23 +159,7 @@ export default function CreatePostPage() {
             disabled={authMutation.isPending}
             type="submit"
           >
-            {authMutation.isPending
-              ? isRegistering
-                ? "建立中…"
-                : "登入中…"
-              : isRegistering
-                ? "建立帳號並登入"
-                : "登入"}
-          </button>
-          <button
-            className="ml-4 text-sm text-[var(--accent-ink)] underline"
-            type="button"
-            onClick={() => {
-              authMutation.reset();
-              setIsRegistering((current) => !current);
-            }}
-          >
-            {isRegistering ? "已有帳號，返回登入" : "還沒有帳號？建立帳號"}
+            {authMutation.isPending ? "登入中…" : "登入"}
           </button>
         </form>
       </main>

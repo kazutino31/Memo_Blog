@@ -8,6 +8,7 @@ import SeriesPage from "@/pages/SeriesPage";
 import WarrantsCalculator from "@/pages/WarrantsCalculator";
 import TopicMapPage from "@/pages/TopicMapPage";
 import CreatePostPage from "@/pages/CreatePostPage";
+import CreateAccountPage from "@/pages/CreateAccountPage";
 
 export const router = createBrowserRouter(
   [
@@ -22,6 +23,7 @@ export const router = createBrowserRouter(
         { path: "/calculator", element: <WarrantsCalculator /> },
         { path: "/topics", element: <TopicMapPage /> },
         { path: "/admin/posts/new", element: <CreatePostPage /> },
+        { path: "/admin/accounts/new", element: <CreateAccountPage /> },
       ],
     },
   ],
