@@ -1,17 +1,28 @@
 import { useRef } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { MarkdownBody } from "@/lib/markdown";
 import { SeriesNav } from "@/components/SeriesNav";
 import { TableOfContents } from "@/components/TableOfContents";
 
 export default function ArticlePage() {
   const { slug } = useParams();
-  const note = useNotesStore((s) => (slug ? s.getBySlug(slug) : undefined));
-  const seriesNotes = useNotesStore((s) =>
-    note?.series ? s.getBySeries(note.series) : [],
-  );
+  const { notes, isLoadingApiNotes } = useNotes();
+  const note = slug ? notes.find((item) => item.slug === slug) : undefined;
+  const seriesNotes = note?.series
+    ? notes
+        .filter((item) => item.series === note.series)
+        .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0))
+    : [];
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  if (!note && isLoadingApiNotes) {
+    return (
+      <div className="mx-auto max-w-[var(--maxw)] px-6 py-16 text-[var(--ink-soft)]">
+        文章載入中…
+      </div>
+    );
+  }
 
   if (!note) {
     return <Navigate to="/" replace />;

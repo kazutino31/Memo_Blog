@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { createSearchIndex } from "@/lib/search";
 
 export function SearchBox() {
-  const notes = useNotesStore((s) => s.notes);
+  const { notes } = useNotes();
   const [query, setQuery] = useState("");
   const fuse = useMemo(() => createSearchIndex(notes), [notes]);
   const results = query.trim()

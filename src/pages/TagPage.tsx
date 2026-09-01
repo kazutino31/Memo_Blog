@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { ArticleCard } from "@/components/ArticleCard";
 
 export default function TagPage() {
   const { tag } = useParams();
-  const allNotes = useNotesStore((s) => s.notes);
+  const { notes: allNotes } = useNotes();
   const notes = useMemo(() => {
     if (!tag) return [];
     const decoded = decodeURIComponent(tag);

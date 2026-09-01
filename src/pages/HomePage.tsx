@@ -1,10 +1,10 @@
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { SearchBox } from "@/components/SearchBox";
 
 export default function HomePage() {
-  const notes = useNotesStore((s) => s.notes);
+  const { notes, isApiUnavailable } = useNotes();
 
   return (
     <div>
@@ -22,6 +22,12 @@ export default function HomePage() {
 
       <SearchBox />
       <CategoryFilter />
+
+      {isApiUnavailable && (
+        <p className="mx-auto max-w-[920px] px-6 pt-5 text-sm text-[var(--ink-faint)]">
+          API 暫時無法連線，目前僅顯示本地 Markdown 文章。
+        </p>
+      )}
 
       <main className="mx-auto max-w-[920px] px-6 pt-2 pb-20">
         {notes.map((note, index) => (

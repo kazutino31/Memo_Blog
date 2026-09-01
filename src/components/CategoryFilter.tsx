@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 
 const chipBase =
@@ -8,7 +8,7 @@ const chipActive =
   "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-ink)]";
 
 export function CategoryFilter() {
-  const categories = useNotesStore((s) => s.categories);
+  const { categories } = useNotes();
   const { category: activeCategory } = useParams();
 
   return (

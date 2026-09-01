@@ -1,14 +1,13 @@
 import { useParams } from "react-router-dom";
-import { useNotesStore } from "@/store/notesStore";
+import { useNotes } from "@/hooks/useNotes";
 import { ArticleCard } from "@/components/ArticleCard";
-
-const EMPTY: never[] = [];
 
 export default function SeriesPage() {
   const { series } = useParams();
-  const notes = useNotesStore((s) =>
-    series ? (s.series[series] ?? EMPTY) : EMPTY,
-  );
+  const { notes: allNotes } = useNotes();
+  const notes = allNotes
+    .filter((note) => note.series === series)
+    .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0));
 
   return (
     <div>

@@ -70,6 +70,14 @@ export default function BaseLayout() {
           <div className="flex items-center gap-4">
             {location.pathname === "/" && (
               <Link
+                to="/admin/posts/new"
+                className="hidden text-sm font-medium text-[var(--ink-soft)] no-underline transition-colors hover:text-[var(--ink)] sm:inline-block"
+              >
+                新增文章
+              </Link>
+            )}
+            {location.pathname === "/" && (
+              <Link
                 to="/calculator"
                 className="hidden sm:inline-block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors"
               >
@@ -119,6 +127,13 @@ export default function BaseLayout() {
         {isMenuOpen && location.pathname === "/" && (
           <div className="sm:hidden border-t border-[var(--rule)] bg-white/88 backdrop-blur-md dark:bg-[#16161a]/88">
             <div className="mx-auto max-w-[920px] px-6 py-3">
+              <Link
+                to="/admin/posts/new"
+                className="block py-2 text-sm font-medium text-[var(--ink-soft)] no-underline transition-colors hover:text-[var(--ink)]"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                新增文章
+              </Link>
               <Link
                 to="/calculator"
                 className="block text-sm font-medium text-[var(--ink-soft)] no-underline hover:text-[var(--ink)] transition-colors py-2"
