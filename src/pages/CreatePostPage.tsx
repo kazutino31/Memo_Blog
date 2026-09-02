@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   changePassword,
   getAccessToken,
@@ -65,7 +65,8 @@ export default function CreatePostPage() {
     mutationFn: (payload: CreatePostPayload) => createPost(payload, token!),
     onSuccess: async (post, payload) => {
       await queryClient.invalidateQueries({ queryKey: postsQueryKey });
-      navigate(payload.published ? `/notes/${post.slug}` : "/");
+      await queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+      navigate(payload.published ? `/notes/${post.slug}` : "/admin/posts");
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
@@ -170,12 +171,12 @@ export default function CreatePostPage() {
     <main className="mx-auto max-w-[920px] px-6 py-12">
       <div className="mb-8 flex items-start justify-between gap-4 border-b border-[var(--rule)] pb-8">
         <div>
-          <div className="mb-3 text-[13px] font-semibold tracking-wider text-[var(--accent-ink)] uppercase">
-            作者工具
-          </div>
           <h1 className="text-4xl font-bold text-[var(--ink)] [font-family:var(--serif)]">
             新增文章
           </h1>
+          <Link className="mt-3 inline-block text-sm font-semibold text-[var(--ink-soft)] underline underline-offset-4 hover:text-[var(--ink)]" to="/admin/posts">
+            返回文章管理
+          </Link>
         </div>
         <button
           className="text-sm text-[var(--ink-soft)] underline"

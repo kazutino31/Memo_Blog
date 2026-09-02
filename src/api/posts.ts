@@ -44,12 +44,47 @@ export interface CreatePostPayload {
   tagNames: string[];
 }
 
+export type UpdatePostPayload = CreatePostPayload;
+
 export async function getPosts() {
   const response = await api.get<PostsResponse>("/posts?limit=100");
-  return response.data;
+  return response.data.filter((post) => post.published);
 }
 
 export async function createPost(payload: CreatePostPayload, token: string) {
   const response = await api.post<PostResponse>("/posts", payload, { token });
   return response.data;
+}
+
+export async function getAdminPosts(token: string) {
+  const response = await api.get<PostsResponse>(
+    "/posts?limit=100&includeUnpublished=true",
+    { token },
+  );
+  return response.data;
+}
+
+export async function updatePost(
+  id: number,
+  payload: UpdatePostPayload,
+  token: string,
+) {
+  const response = await api.patch<PostResponse>(`/posts/${id}`, payload, {
+    token,
+  });
+  return response.data;
+}
+
+export async function updatePostPublished(
+  id: number,
+  published: boolean,
+  token: string,
+) {
+  const action = published ? "publish" : "unpublish";
+  const response = await api.patch<PostResponse | null>(
+    `/posts/${id}/${action}`,
+    undefined,
+    { token },
+  );
+  return response?.data ?? null;
 }

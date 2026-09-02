@@ -83,8 +83,11 @@ export default function BaseLayout() {
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated && (
-              <Link to="/admin/accounts/new" className="text-sm font-medium text-[var(--accent-ink)] no-underline transition-colors hover:text-[var(--ink)]">
-                建立帳號
+              <Link
+                to="/admin/posts"
+                className="text-sm font-medium text-[var(--accent-ink)] no-underline transition-colors hover:text-[var(--ink)]"
+              >
+                文章管理
               </Link>
             )}
             {location.pathname === "/" && (
@@ -111,34 +114,40 @@ export default function BaseLayout() {
                 主題關聯圖
               </Link>
             )}
-            {location.pathname === "/" && (
-            <ThemeToggle />
+            {isAuthenticated && (
+              <Link
+                to="/admin/accounts/new"
+                className="hidden text-sm font-medium text-[var(--ink-soft)] no-underline transition-colors hover:text-[var(--ink)] sm:inline-block"
+              >
+                建立帳號
+              </Link>
             )}
+            {location.pathname === "/" && <ThemeToggle />}
             {/* 漢堡選單（手機端） */}
             {location.pathname === "/" && (
-            <button
-              className="sm:hidden cursor-pointer border-none bg-transparent p-0 text-[var(--ink-soft)] hover:text-[var(--ink)]"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="開啟選單"
-            >
-              <svg
-                className="h-6 w-6"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+              <button
+                className="sm:hidden cursor-pointer border-none bg-transparent p-0 text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="開啟選單"
               >
-                {isMenuOpen ? (
-                  <path d="M18 6L6 18M6 6l12 12" />
-                ) : (
-                  <>
-                    <path d="M3 6h18" />
-                    <path d="M3 12h18" />
-                    <path d="M3 18h18" />
-                  </>
-                )}
-              </svg>
-            </button>
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  {isMenuOpen ? (
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  ) : (
+                    <>
+                      <path d="M3 6h18" />
+                      <path d="M3 12h18" />
+                      <path d="M3 18h18" />
+                    </>
+                  )}
+                </svg>
+              </button>
             )}
           </div>
         </div>

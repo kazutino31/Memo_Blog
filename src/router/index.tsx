@@ -9,6 +9,9 @@ import WarrantsCalculator from "@/pages/WarrantsCalculator";
 import TopicMapPage from "@/pages/TopicMapPage";
 import CreatePostPage from "@/pages/CreatePostPage";
 import CreateAccountPage from "@/pages/CreateAccountPage";
+import AdminGuard from "@/components/AdminGuard";
+import AdminPostsPage from "@/pages/AdminPostsPage";
+import EditPostPage from "@/pages/EditPostPage";
 
 export const router = createBrowserRouter(
   [
@@ -22,8 +25,16 @@ export const router = createBrowserRouter(
         { path: "/series/:series", element: <SeriesPage /> },
         { path: "/calculator", element: <WarrantsCalculator /> },
         { path: "/topics", element: <TopicMapPage /> },
-        { path: "/admin/posts/new", element: <CreatePostPage /> },
-        { path: "/admin/accounts/new", element: <CreateAccountPage /> },
+        {
+          path: "/admin",
+          element: <AdminGuard />,
+          children: [
+            { path: "posts", element: <AdminPostsPage /> },
+            { path: "posts/new", element: <CreatePostPage /> },
+            { path: "posts/:id/edit", element: <EditPostPage /> },
+            { path: "accounts/new", element: <CreateAccountPage /> },
+          ],
+        },
       ],
     },
   ],
