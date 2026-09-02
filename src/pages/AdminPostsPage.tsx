@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Pencil, Plus } from "lucide-react";
+import { Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getAccessToken, removeAccessToken } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import {
+  deletePost,
   getAdminPosts,
   type ApiPost,
   updatePostPublished,
@@ -33,6 +34,7 @@ export default function AdminPostsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [changingId, setChangingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const postsQuery = useQuery({
     queryKey: adminPostsQueryKey,
     queryFn: () => getAdminPosts(token),
@@ -58,6 +60,29 @@ export default function AdminPostsPage() {
     },
     onSettled: () => setChangingId(null),
   });
+  const deleteMutation = useMutation({
+    mutationFn: (post: ApiPost) => {
+      setDeletingId(post.id);
+      return deletePost(post.id, token);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPostsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: postsQueryKey }),
+      ]);
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 401) removeAccessToken();
+    },
+    onSettled: () => setDeletingId(null),
+  });
+
+  function handleDelete(post: ApiPost) {
+    const confirmed = window.confirm(
+      `確定要刪除「${post.title}」嗎？\n\n文章刪除後無法復原。`,
+    );
+    if (confirmed) deleteMutation.mutate(post);
+  }
 
   const posts = useMemo(() => {
     const items = postsQuery.data ?? [];
@@ -133,6 +158,8 @@ export default function AdminPostsPage() {
         <div className="border-t border-[var(--rule)]">
           {posts.map((post) => {
             const isChanging = statusMutation.isPending && changingId === post.id;
+            const isDeleting = deleteMutation.isPending && deletingId === post.id;
+            const isBusy = statusMutation.isPending || deleteMutation.isPending;
             return (
               <article className="grid gap-5 border-b border-[var(--rule)] py-7 md:grid-cols-[1fr_auto] md:items-center" key={post.id}>
                 <div className="min-w-0">
@@ -152,11 +179,20 @@ export default function AdminPostsPage() {
                   <button
                     className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--accent-brand)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-brand-hover)] disabled:opacity-60"
                     type="button"
-                    disabled={statusMutation.isPending}
+                    disabled={isBusy}
                     onClick={() => statusMutation.mutate({ post, published: !post.published })}
                   >
                     {post.published ? <EyeOff aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                     {isChanging ? "更新中…" : post.published ? "下架" : "發布"}
+                  </button>
+                  <button
+                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-red-300 px-4 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => handleDelete(post)}
+                  >
+                    <Trash2 aria-hidden="true" size={16} />
+                    {isDeleting ? "刪除中…" : "刪除"}
                   </button>
                 </div>
               </article>
@@ -167,6 +203,9 @@ export default function AdminPostsPage() {
 
       {statusMutation.isError && (
         <p className="mt-5 text-sm text-red-600" role="alert">{errorMessage(statusMutation.error)}</p>
+      )}
+      {deleteMutation.isError && (
+        <p className="mt-5 text-sm text-red-600" role="alert">刪除失敗：{errorMessage(deleteMutation.error)}</p>
       )}
     </main>
   );

@@ -92,3 +92,7 @@ export async function updatePostPublished(
   );
   return response?.data ?? null;
 }
+
+export async function deletePost(id: number, token: string) {
+  await api.delete<null>(`/posts/${id}`, { token });
+}
