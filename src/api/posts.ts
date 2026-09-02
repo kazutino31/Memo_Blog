@@ -57,10 +57,14 @@ export async function createPost(payload: CreatePostPayload, token: string) {
 }
 
 export async function getAdminPosts(token: string) {
-  const response = await api.get<PostsResponse>(
-    "/posts?limit=100&includeUnpublished=true",
-    { token },
-  );
+  const response = await api.get<PostsResponse>("/posts/manage", { token });
+  return response.data;
+}
+
+export async function getManagedPost(id: number, token: string) {
+  const response = await api.get<PostResponse>(`/posts/manage/${id}`, {
+    token,
+  });
   return response.data;
 }
 

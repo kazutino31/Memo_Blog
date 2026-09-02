@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAccessToken, removeAccessToken } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import {
-  getAdminPosts,
+  getManagedPost,
   updatePost,
   type UpdatePostPayload,
 } from "@/api/posts";
@@ -41,17 +41,18 @@ export default function EditPostPage() {
   const [form, setForm] = useState<UpdatePostPayload>(emptyForm);
   const [tagsInput, setTagsInput] = useState("");
   const [isReady, setIsReady] = useState(false);
-  const postsQuery = useQuery({
-    queryKey: adminPostsQueryKey,
-    queryFn: () => getAdminPosts(token),
+  const postQuery = useQuery({
+    queryKey: ["managed-post", postId],
+    queryFn: () => getManagedPost(postId, token),
+    enabled: Number.isInteger(postId) && postId > 0,
   });
-  const post = postsQuery.data?.find((item) => item.id === postId);
+  const post = postQuery.data;
 
   useEffect(() => {
-    if (postsQuery.error instanceof ApiError && postsQuery.error.status === 401) {
+    if (postQuery.error instanceof ApiError && postQuery.error.status === 401) {
       removeAccessToken();
     }
-  }, [postsQuery.error]);
+  }, [postQuery.error]);
 
   useEffect(() => {
     if (!post || isReady) return;
@@ -84,10 +85,10 @@ export default function EditPostPage() {
   if (!Number.isInteger(postId) || postId <= 0) {
     return <main className="mx-auto max-w-[920px] px-6 py-16"><p className="text-red-600">文章編號無效。</p></main>;
   }
-  if (postsQuery.isLoading) {
+  if (postQuery.isLoading) {
     return <main className="mx-auto max-w-[920px] px-6 py-16 text-[var(--ink-soft)]">正在載入文章…</main>;
   }
-  if (postsQuery.isError || !post) {
+  if (postQuery.isError || !post) {
     return (
       <main className="mx-auto max-w-[920px] px-6 py-16">
         <h1 className="text-3xl font-bold [font-family:var(--serif)]">找不到文章</h1>
