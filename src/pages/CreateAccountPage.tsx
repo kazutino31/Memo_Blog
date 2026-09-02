@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { getAccessToken, register, removeAccessToken } from "@/api/auth";
 import { ApiError } from "@/api/client";
 
@@ -23,6 +23,7 @@ export default function CreateAccountPage() {
       <header className="mb-8 border-b border-[var(--rule)] pb-8">
         <h1 className="text-4xl font-bold text-[var(--ink)] [font-family:var(--serif)]">建立帳號</h1>
         <p className="mt-3 text-[var(--ink-soft)]">建立新的作者帳號；完成後仍會保持目前的登入狀態。</p>
+        <Link className="mt-3 inline-block text-sm font-semibold text-[var(--ink-soft)] underline underline-offset-4 hover:text-[var(--ink)]" to="/admin/account">返回帳號管理</Link>
       </header>
       <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); mutation.mutate(); }}>
         <label className="block space-y-2"><span className="text-sm font-semibold">顯示名稱</span><input className={inputClass} required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} /></label>

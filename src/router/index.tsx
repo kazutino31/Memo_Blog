@@ -12,6 +12,7 @@ import CreateAccountPage from "@/pages/CreateAccountPage";
 import AdminGuard from "@/components/AdminGuard";
 import AdminPostsPage from "@/pages/AdminPostsPage";
 import EditPostPage from "@/pages/EditPostPage";
+import AccountManagementPage from "@/pages/AccountManagementPage";
 
 export const router = createBrowserRouter(
   [
@@ -32,6 +33,7 @@ export const router = createBrowserRouter(
             { path: "posts", element: <AdminPostsPage /> },
             { path: "posts/new", element: <CreatePostPage /> },
             { path: "posts/:id/edit", element: <EditPostPage /> },
+            { path: "account", element: <AccountManagementPage /> },
             { path: "accounts/new", element: <CreateAccountPage /> },
           ],
         },

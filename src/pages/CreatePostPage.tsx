@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  changePassword,
-  getAccessToken,
-  login,
-  removeAccessToken,
-  saveAccessToken,
-} from "@/api/auth";
+import { getAccessToken, removeAccessToken } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { createPost, type CreatePostPayload } from "@/api/posts";
 import { MarkdownBody } from "@/lib/markdown";
@@ -33,9 +27,7 @@ function errorMessage(error: unknown) {
 export default function CreatePostPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [token, setToken] = useState(() => getAccessToken());
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const token = getAccessToken()!;
   const [form, setForm] = useState<CreatePostPayload>({
     title: "",
     slug: "",
@@ -46,20 +38,6 @@ export default function CreatePostPage() {
   });
   const [tagsInput, setTagsInput] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordValidationError, setPasswordValidationError] = useState("");
-
-  const authMutation = useMutation({
-    mutationFn: () => login({ email, password }),
-    onSuccess: (accessToken) => {
-      saveAccessToken(accessToken);
-      setToken(accessToken);
-      setPassword("");
-    },
-  });
 
   const createMutation = useMutation({
     mutationFn: (payload: CreatePostPayload) => createPost(payload, token!),
@@ -71,31 +49,9 @@ export default function CreatePostPage() {
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
         removeAccessToken();
-        setToken(null);
       }
     },
   });
-
-  const passwordMutation = useMutation({
-    mutationFn: () => changePassword({ currentPassword, newPassword }, token!),
-    onSuccess: () => {
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordValidationError("");
-    },
-    onError: (error) => {
-      if (error instanceof ApiError && error.status === 401) {
-        removeAccessToken();
-        setToken(null);
-      }
-    },
-  });
-
-  function handleLogin(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    authMutation.mutate();
-  }
 
   function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,68 +64,9 @@ export default function CreatePostPage() {
     });
   }
 
-  function handlePasswordSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    passwordMutation.reset();
-
-    if (newPassword !== confirmPassword) {
-      setPasswordValidationError("兩次輸入的新密碼不一致");
-      return;
-    }
-
-    setPasswordValidationError("");
-    passwordMutation.mutate();
-  }
-
-  if (!token) {
-    return (
-      <main className="mx-auto max-w-[520px] px-6 py-16">
-        <h1 className="mb-3 text-4xl font-bold text-[var(--ink)] [font-family:var(--serif)]">
-          登入
-        </h1>
-        <p className="mb-8 text-[var(--ink-soft)]">新增文章前需先登入。</p>
-        <form className="space-y-5" onSubmit={handleLogin}>
-          <label className="block space-y-2">
-            <span className="text-sm font-semibold">Email</span>
-            <input
-              className={inputClass}
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="text-sm font-semibold">密碼</span>
-            <input
-              className={inputClass}
-              type="password"
-              required
-              maxLength={72}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          {authMutation.isError && (
-            <p className="text-sm text-red-600" role="alert">
-              {errorMessage(authMutation.error)}
-            </p>
-          )}
-          <button
-            className="rounded-lg bg-[var(--accent-brand)] px-5 py-3 font-semibold text-white hover:bg-[var(--accent-brand-hover)] disabled:opacity-60"
-            disabled={authMutation.isPending}
-            type="submit"
-          >
-            {authMutation.isPending ? "登入中…" : "登入"}
-          </button>
-        </form>
-      </main>
-    );
-  }
-
   return (
     <main className="mx-auto max-w-[920px] px-6 py-12">
-      <div className="mb-8 flex items-start justify-between gap-4 border-b border-[var(--rule)] pb-8">
+      <div className="mb-8 border-b border-[var(--rule)] pb-8">
         <div>
           <h1 className="text-4xl font-bold text-[var(--ink)] [font-family:var(--serif)]">
             新增文章
@@ -178,98 +75,7 @@ export default function CreatePostPage() {
             返回文章管理
           </Link>
         </div>
-        <button
-          className="text-sm text-[var(--ink-soft)] underline"
-          type="button"
-          onClick={() => {
-            removeAccessToken();
-            setToken(null);
-          }}
-        >
-          登出
-        </button>
       </div>
-
-      <section className="mb-10 rounded-xl border border-[var(--rule)] bg-[var(--paper)] p-5">
-        <button
-          className="flex w-full items-center justify-between bg-transparent text-left font-semibold text-[var(--ink)]"
-          type="button"
-          aria-expanded={isPasswordFormOpen}
-          onClick={() => {
-            passwordMutation.reset();
-            setPasswordValidationError("");
-            setIsPasswordFormOpen((current) => !current);
-          }}
-        >
-          修改密碼
-          <span aria-hidden="true">{isPasswordFormOpen ? "−" : "+"}</span>
-        </button>
-        {isPasswordFormOpen && (
-          <form
-            className="mt-5 grid gap-4 md:grid-cols-3"
-            onSubmit={handlePasswordSubmit}
-          >
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold">目前密碼</span>
-              <input
-                className={inputClass}
-                type="password"
-                required
-                maxLength={72}
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(event) => setCurrentPassword(event.target.value)}
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold">新密碼</span>
-              <input
-                className={inputClass}
-                type="password"
-                required
-                minLength={8}
-                maxLength={72}
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-semibold">再次輸入新密碼</span>
-              <input
-                className={inputClass}
-                type="password"
-                required
-                minLength={8}
-                maxLength={72}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-              />
-            </label>
-            <div className="md:col-span-3">
-              {(passwordValidationError || passwordMutation.isError) && (
-                <p className="mb-3 text-sm text-red-600" role="alert">
-                  {passwordValidationError ||
-                    errorMessage(passwordMutation.error)}
-                </p>
-              )}
-              {passwordMutation.isSuccess && (
-                <p className="mb-3 text-sm text-green-700" role="status">
-                  密碼已更新
-                </p>
-              )}
-              <button
-                className="rounded-lg bg-[var(--accent-brand)] px-5 py-2.5 font-semibold text-white hover:bg-[var(--accent-brand-hover)] disabled:opacity-60"
-                disabled={passwordMutation.isPending}
-                type="submit"
-              >
-                {passwordMutation.isPending ? "更新中…" : "更新密碼"}
-              </button>
-            </div>
-          </form>
-        )}
-      </section>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="grid gap-6 md:grid-cols-2">

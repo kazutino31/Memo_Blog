@@ -116,10 +116,10 @@ export default function BaseLayout() {
             )}
             {isAuthenticated && (
               <Link
-                to="/admin/accounts/new"
-                className="hidden text-sm font-medium text-[var(--ink-soft)] no-underline transition-colors hover:text-[var(--ink)] sm:inline-block"
+                to="/admin/account"
+                className="text-sm font-medium text-[var(--ink-soft)] no-underline transition-colors hover:text-[var(--ink)]"
               >
-                建立帳號
+                帳號管理
               </Link>
             )}
             {location.pathname === "/" && <ThemeToggle />}
